@@ -1,5 +1,6 @@
 # ar-bot
 [![Build Status](https://travis-ci.org/deciduously/ar-bot.svg?branch=master)](https://travis-ci.org/deciduously/ar-bot)
+
 Simple tool for collection and batching of auto-generated emails, in an attempt to save paper.
 ## Usage
 `ar-bot [FLAGS] [OPTIONS]`
