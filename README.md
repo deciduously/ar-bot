@@ -1,4 +1,5 @@
 # ar-bot
+[![Build Status](https://travis-ci.org/deciduously/ar-bot.svg?branch=master)](https://travis-ci.org/deciduously/ar-bot)
 Simple tool for collection and batching of auto-generated emails, in an attempt to save paper.
 ## Usage
 `ar-bot [FLAGS] [OPTIONS]`
@@ -15,7 +16,7 @@ OPTIONS:
 ## Dependencies
 * Stable rust
 ## Crates
-* [clap](https://clap.rs)
+* [clap](https://github.com/kbknapp/clap-rs)
 * [error-chain](https://github.com/rust-lang-nursery/error-chain)
 * [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs)
 * [regex](https://github.com/rust-lang/regex)

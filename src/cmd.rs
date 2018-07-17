@@ -1,6 +1,6 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
-use config::init_config;
 use clap::{App, Arg};
+use config::init_config;
 use errors::*;
 
 use util::file_contents_from_str_path;

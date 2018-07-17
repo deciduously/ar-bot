@@ -1,3 +1,4 @@
+// main.rs is the entry point of the executable
 #![recursion_limit = "1024"]
 
 extern crate clap;
@@ -23,7 +24,6 @@ mod errors {
 mod util;
 
 use cmd::run;
-use errors::*;
 
 fn main() {
     // Immediately call into a properly error-chained fn

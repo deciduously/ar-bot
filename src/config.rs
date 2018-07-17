@@ -31,9 +31,8 @@ impl Default for Config {
 }
 
 pub fn init_config(s: Option<&str>) -> Result<Config> {
-    let config: Config = toml::from_str(&file_contents_from_str_path(s.unwrap_or(
-        DEFAULT_CONFIG,
-    ))?).chain_err(|| "Could not read config file")?;
+    let config: Config = toml::from_str(&file_contents_from_str_path(s.unwrap_or(DEFAULT_CONFIG))?)
+        .chain_err(|| "Could not read config file")?;
     Ok(config)
 }
 

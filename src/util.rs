@@ -1,4 +1,4 @@
-// util.rs holds stuff I use in a few differnt places, basically.  Sue me.
+// util.rs holds, well, utlitiy functions
 use errors::*;
 use std::io::{prelude::*, BufReader};
 

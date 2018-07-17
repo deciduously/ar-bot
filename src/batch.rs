@@ -1,4 +1,4 @@
-// batch.rs handles the string parsing and batching logic for eliminating redundant line items 
+// batch.rs handles the string parsing and batching logic for eliminating redundant line items
 use errors::*;
 use regex::Regex;
 use std::{fmt, str::FromStr};
