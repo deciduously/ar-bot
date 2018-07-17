@@ -8,15 +8,16 @@ extern crate lazy_static;
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
+extern crate regex;
 
 mod batch;
 mod errors {
-    error_chain! { }
+    error_chain!{}
 }
 
-use clap::{Arg, App};
+use clap::{App, Arg};
 use errors::*;
-use std::io::{BufReader, prelude::*};
+use std::io::{prelude::*, BufReader};
 
 fn main() {
     if let Err(ref e) = run() {
@@ -49,28 +50,36 @@ fn run() -> Result<()> {
         .version("0.1.0")
         .author("deciduously <bendlovy@gmail.com>")
         .about("Batching of auto email alerts")
-        .arg(Arg::with_name("add")
-             .short("a")
-             .long("add")
-             .value_name("INPUT_FILE")
-             .help("Add a new file to the register")
-             .takes_value(true))
-        .arg(Arg::with_name("preview")
-             .short("p")
-             .long("preview")
-             .takes_value(false)
-             .help("Displays the current contents of the batch"))
-        .arg(Arg::with_name("report")
-             .short("r")
-             .long("report")
-             .takes_value(false)
-             .help("Daily report comparing inputs to outputs for the day"))
+        .arg(
+            Arg::with_name("add")
+                .short("a")
+                .long("add")
+                .value_name("INPUT_FILE")
+                .help("Add a new file to the register")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("preview")
+                .short("p")
+                .long("preview")
+                .takes_value(false)
+                .help("Displays the current contents of the batch"),
+        )
+        .arg(
+            Arg::with_name("report")
+                .short("r")
+                .long("report")
+                .takes_value(false)
+                .help("Daily report comparing inputs to outputs for the day"),
+        )
         .get_matches();
-    
+
     if matches.is_present("add") {
-        let _ = add(matches.value_of("INPUT_FILE").expect("Must provide input file"))
+        let _ = add(matches
+            .value_of("INPUT_FILE")
+            .expect("Must provide input file"))
             .chain_err(|| "Could not add input");
     }
-    
+
     Ok(())
 }
