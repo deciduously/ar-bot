@@ -1,5 +1,7 @@
+// config.rs handles loading and eventually writing to the app configuration
 use errors::*;
 use toml;
+use util::file_contents_from_str_path;
 
 static DEFAULT_CONFIG: &'static str = "Bot.toml";
 
@@ -29,7 +31,7 @@ impl Default for Config {
 }
 
 pub fn init_config(s: Option<&str>) -> Result<Config> {
-    let config: Config = toml::from_str(&super::file_contents_from_str_path(s.unwrap_or(
+    let config: Config = toml::from_str(&file_contents_from_str_path(s.unwrap_or(
         DEFAULT_CONFIG,
     ))?).chain_err(|| "Could not read config file")?;
     Ok(config)
