@@ -43,4 +43,16 @@ mod tests {
     fn test_init_config_default() {
         assert_eq!(init_config(None).unwrap(), Config::default())
     }
+    #[test]
+    fn test_init_config_alterate_file() {
+        assert_eq!(
+            init_config(Some("Alternate.toml")).unwrap(),
+            Config {
+                directory: Directory {
+                    compressed: false,
+                    path: "./storage/".into(),
+                }
+            }
+        )
+    }
 }

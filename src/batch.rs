@@ -54,12 +54,12 @@ impl FromStr for Entry {
 
         if AD_RE.is_match(s) {
             let captures = AD_RE.captures(s).unwrap();
-            return Ok(Entry {
+            Ok(Entry {
                 id: (&captures["id"])
                     .parse::<u32>()
                     .chain_err(|| "Could not read iMIS id")?,
                 product: Product::from_str(&captures["product"])?,
-            });
+            })
         } else {
             bail!("Couldn't match Regex")
         }
