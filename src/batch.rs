@@ -4,13 +4,13 @@ use std::{fmt, str::FromStr};
 
 #[derive(Debug, PartialEq)]
 pub enum Product {
-    CG_BILLING,
-    CG_TRANS,
-    CAMP_KALE_TUIT,
-    CAMP_KALE_TRANS,
-    CAMP_KING_TUIT,
-    CAMP_KING_TRANS,
-    Other,
+    CgBilling,
+    CgTrans,
+    CampKaleTuit,
+    CampKaleTrans,
+    CampKingTuit,
+    CampKingTrans,
+    Other(String),
 }
 
 impl FromStr for Product {
@@ -19,13 +19,13 @@ impl FromStr for Product {
     fn from_str(s: &str) -> Result<Self> {
         use self::Product::*;
         match s {
-            "CG_BILLING" => Ok(CG_BILLING),
-            "CG_TRANS" => Ok(CG_TRANS),
-            "CAMP_KALE_TUIT" => Ok(CAMP_KALE_TUIT),
-            "CAMP_KALE_TRANS" => Ok(CAMP_KALE_TRANS),
-            "CAMP_KING_TUIT" => Ok(CAMP_KALE_TUIT),
-            "CAMP_KING_TRANS" => Ok(CAMP_KING_TRANS),
-            _ => Ok(Other),
+            "CG_BILLING" => Ok(CgBilling),
+            "CG_TRANS" => Ok(CgTrans),
+            "CAMP_KALE_TUIT" => Ok(CampKaleTuit),
+            "CAMP_KALE_TRANS" => Ok(CampKaleTrans),
+            "CAMP_KING_TUIT" => Ok(CampKingTuit),
+            "CAMP_KING_TRANS" => Ok(CampKingTrans),
+            _ => Ok(Other(s.into())),
         }
     }
 }
@@ -69,20 +69,22 @@ impl FromStr for Entry {
 // Can store multiple entries
 //
 #[derive(Debug)]
-pub struct BatchedEntry {
+pub struct BatchEntry {
     pub id: u32,
     pub products: Vec<Product>,
-//    pub times:
+    //    pub times:
 }
 
 // The final batch
 pub struct Batch {
-    entries: Vec<BatchedEntry>,
+    entries: Vec<BatchEntry>,
 }
 
 impl Batch {
     pub fn new() -> Self {
-        Batch { entries: Vec::new() }
+        Batch {
+            entries: Vec::new(),
+        }
     }
 }
 
@@ -92,11 +94,11 @@ mod tests {
     fn test_entry_from_str() {
         use super::*;
 
-        let input_str = "The Grossman Invoice For iMIS ID 12345 For the Product CG_BILLING Has Changed You need to verify the Autodraft is now correct";
+        let input_str = "The Cool Invoice For iMIS ID 12345 For the Product COOL_PROD Has Changed You need to verify the Autodraft is now correct";
         assert_eq!(
             Entry {
                 id: 12345,
-                product: Product::CG_BILLING,
+                product: Product::Other(String::from("COOL_PROD")),
             },
             Entry::from_str(input_str).unwrap()
         )

@@ -9,6 +9,9 @@ clap = "2"
 error-chain = "0.12"
 lazy_static = "1.0"
 regex = "1"
+serde = "1"
+serde_derive = "1"
+toml = "0.4"
 
 [dev-dependencies]
 
