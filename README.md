@@ -23,6 +23,10 @@ OPTIONS:
 * `-a, --add <INPUT_FILE>`        Add a new file to the register
 * `-c, --config <CONFIG_FILE>`    Specify an alternate toml config file
 
+Feel free to mix and match any of the above, it's fun.  A little.  
+
+With no config given it will default to `Bot.toml`, and with no flags or options passed it will print its configuration and quit.
+
 ## Dependencies
 
 * Stable rust

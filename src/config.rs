@@ -11,6 +11,7 @@ static DEFAULT_CONFIG: &'static str = "Bot.toml";
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct Config {
+    config_path: Option<String>, // Workaround so we can fill it in during initialiation without an intermediate struct
     directory: Directory,
 }
 
@@ -20,9 +21,18 @@ pub struct Directory {
     pub path: String,
 }
 
+impl Config {
+    fn add_config_path(&mut self, s: &str) -> Result<()> {
+        self.config_path = Some(s.into());
+        Ok(())
+    }
+    // TODO add more self mutations here, use Clap subcommands to provide easy access
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
+            config_path: Some("Bot.toml".into()),
             directory: Directory {
                 compressed: false,
                 path: "./brain/".into(),
@@ -57,8 +67,9 @@ impl fmt::Display for Directory {
 }
 
 pub fn init_config(s: Option<&str>) -> Result<Config> {
-    let config: Config = toml::from_str(&file_contents_from_str_path(s.unwrap_or(DEFAULT_CONFIG))?)
+    let mut config: Config = toml::from_str(&file_contents_from_str_path(s.unwrap_or(DEFAULT_CONFIG))?)
         .chain_err(|| "Could not read config file")?;
+    config.add_config_path(s.unwrap_or(DEFAULT_CONFIG))?;
     Ok(config)
 }
 
@@ -75,6 +86,7 @@ mod tests {
         assert_eq!(
             init_config(Some("Alternate.toml")).unwrap(),
             Config {
+                config_path: Some("Alternate.toml".into()),
                 directory: Directory {
                     compressed: true,
                     path: "./storage/".into(),

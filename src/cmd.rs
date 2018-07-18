@@ -1,14 +1,18 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
+use batch::Entry;
 use brain::get_current_batch;
 use clap::{App, Arg};
 use config::init_config;
 use errors::*;
+use std::str::FromStr;
 
 use util::file_contents_from_str_path;
 
+static VERSION: &'static str = "0.1.0";
+
 fn add(input_p: &str) -> Result<()> {
     let input = file_contents_from_str_path(input_p)?;
-    println!("Input: {}", input); // TODO, obviously
+    println!("Input: {}", Entry::from_str(&input)?); // TODO, obviously
 
     Ok(())
 }
@@ -21,7 +25,7 @@ fn preview() -> Result<()> {
 
 fn report() -> Result<()> {
     // TODO, again
-    println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.:");
+    println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.");
 
     Ok(())
 }
@@ -29,7 +33,7 @@ fn report() -> Result<()> {
 // This is the entrypoint - essentially main()
 pub fn run() -> Result<()> {
     let matches = App::new("ar-bot")
-        .version("0.1.0")
+        .version(VERSION)
         .author("deciduously <bendlovy@gmail.com>") // TODO read this from Cargo.toml?!
         .about("Batching of auto email alerts")
         .arg(
@@ -66,10 +70,11 @@ pub fn run() -> Result<()> {
 
     if matches.is_present("add") {
         let _ = add(matches
-            .value_of("input")
+            .value_of("add")
             .expect("Could not read INPUT_FILE"))
             .chain_err(|| "Could not add input");
     }
+    println!("AR-Bot v.{}\npass '-h' or '--help' for usage\n", VERSION);
 
     let config =
         init_config(matches.value_of("config")).chain_err(|| "Could not load configuration")?;

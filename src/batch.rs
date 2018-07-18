@@ -31,6 +31,22 @@ impl FromStr for Product {
     }
 }
 
+impl fmt::Display for Product {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::Product::*;
+
+        match self {
+            CgBilling => write!(f, "Grossman Tuition"),
+            CgTrans => write!(f, "Grossman Tranportation"),
+            CampKaleTuit => write!(f, "Kaleidoscope Tuition"),
+            CampKaleTrans => write!(f, "Kaleidoscope Transportation"),
+            CampKingTuit => write!(f, "Kingswood Tuition"),
+            CampKingTrans => write!(f, "Kingswood Transportation"),
+            Other(s) => write!(f, "Non-builtin: {}", s),
+        }
+    }
+}
+
 // represents a single email alert
 #[derive(Debug, PartialEq)]
 pub struct Entry {
@@ -41,7 +57,7 @@ pub struct Entry {
 
 impl fmt::Display for Entry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "iMIS ID: {} - CHECK PRODUCT {:?}", self.id, self.product)
+        write!(f, "ID: {}, PRODUCT {:?}", self.id, self.product)
     }
 }
 
