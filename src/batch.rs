@@ -204,4 +204,16 @@ mod tests {
             Entry::from_str(input_str).unwrap()
         )
     }
+    #[test]
+    fn test_add_entry_to_empty_batch() {
+        assert_eq!("Write", "Me")
+    }
+    #[test]
+    fn test_add_entry_duplicate_id() {
+        assert_eq!("Write", "Me")
+    }
+    #[test]
+    fn test_add_entry_duplicate_id_and_product() {
+        assert_eq!("Write", "Me")
+    }
 }

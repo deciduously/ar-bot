@@ -46,7 +46,7 @@ pub fn run() -> Result<()> {
                 .help("Add a new file to the register")
                 .takes_value(true),
         )
-        // THis one will be a subcommand with subcommands
+        // This one will be a subcommand with subcommands
         .arg(
             Arg::with_name("config")
                 .short("c")
@@ -80,7 +80,7 @@ pub fn run() -> Result<()> {
         init_config(matches.value_of("config")).chain_err(|| "Could not load configuration")?;
     println!("{}\n", config);
 
-    // TODO, instead of just a Cnfig, pass around a Context with that and the Brain
+    // TODO, instead of just a Config, pass around a Context with that and the Brain
 
     if matches.is_present("add") {
         let _ = add(
