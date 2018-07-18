@@ -1,8 +1,8 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
 use batch::Entry;
-use brain::get_current_batch;
+use brain::{get_current_batch, write_brain_dir, Brain};
 use clap::{App, Arg};
-use config::init_config;
+use config::{init_config, Config};
 use errors::*;
 use std::str::FromStr;
 
@@ -10,20 +10,21 @@ use util::file_contents_from_str_path;
 
 static VERSION: &'static str = "0.1.0";
 
-fn add(input_p: &str) -> Result<()> {
+fn add(c: &Config, input_p: &str) -> Result<()> {
+    let brain = Brain::get(c)?;
     let input = file_contents_from_str_path(input_p)?;
     println!("Input: {}\n", Entry::from_str(&input)?); // TODO, obviously
-
+    write_brain_dir(&brain)?;
     Ok(())
 }
 
-fn preview() -> Result<()> {
-    let current_batch = get_current_batch()?;
+fn preview(c: &Config) -> Result<()> {
+    let current_batch = get_current_batch(c)?;
     println!("{}\n", current_batch);
     Ok(())
 }
 
-fn report() -> Result<()> {
+fn report(_c: &Config) -> Result<()> {
     // TODO, again
     println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.\n");
 
@@ -74,17 +75,21 @@ pub fn run() -> Result<()> {
         init_config(matches.value_of("config")).chain_err(|| "Could not load configuration")?;
     println!("{}\n", config);
 
+    // TODO, instead of just a COnfig, pass around a Context with that and the Brain
+
     if matches.is_present("add") {
-        let _ = add(matches.value_of("add").expect("Could not read INPUT_FILE"))
-            .chain_err(|| "Could not add input");
+        let _ = add(
+            &config,
+            matches.value_of("add").expect("Could not read INPUT_FILE"),
+        ).chain_err(|| "Could not add input");
     }
 
     if matches.is_present("preview") {
-        preview()?;
+        preview(&config)?;
     }
 
     if matches.is_present("report") {
-        report()?;
+        report(&config)?;
     }
 
     println!("Goodbye!");
