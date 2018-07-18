@@ -11,10 +11,11 @@ use util::file_contents_from_str_path;
 static VERSION: &'static str = "0.1.0";
 
 fn add(c: &Config, input_p: &str) -> Result<()> {
-    let brain = Brain::get_all(c)?;
+    let mut brain = Brain::get_all(c)?;
     let input = file_contents_from_str_path(input_p)?;
-    println!("Input: {}\n", Entry::from_str(&input)?); // TODO, obviously
-    Brain::write_all(&brain, c)?;
+    let entry = Entry::from_str(&input)?;
+    println!("Input: {}\n", entry);
+    brain.add_entry(entry, c)?;
     Ok(())
 }
 
@@ -25,7 +26,7 @@ fn preview(c: &Config) -> Result<()> {
 }
 
 fn report(_c: &Config) -> Result<()> {
-    // TODO, again
+    // TODO
     println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.\n");
 
     Ok(())

@@ -1,5 +1,5 @@
 // brain.rs handles all internal storage directory access
-use batch::Batch;
+use batch::{Batch, Entry};
 use config::Config;
 use errors::*;
 use regex::Regex;
@@ -15,21 +15,6 @@ use util::file_contents_from_str_path;
 pub struct Brain {
     pub batch: Batch,
     pub emails: Vec<Email>,
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Email {
-    pub filename: String,
-    pub contents: String,
-}
-
-impl Email {
-    fn new(path: &str) -> Result<Self> {
-        Ok(Email {
-            filename: path.into(),
-            contents: file_contents_from_str_path(path)?,
-        })
-    }
 }
 
 impl Brain {
@@ -86,11 +71,10 @@ impl Brain {
             Batch::from_str(&file_contents_from_str_path(current_batch_p)?)?
         };
 
-        // Read in any emails
-
+        // Put together the brain, persist it to disk, and return it
         let brain = Brain { batch, emails };
-
         println!("Brain:\n{:#?}\n", brain);
+        let _ = brain.write_all(c)?; // TODO do we need this here??  only if we built a fresh brain, really
         Ok(brain)
     }
 
@@ -104,11 +88,12 @@ impl Brain {
 
         // write the batch
         let date = "TEMPDATE";
+        // THIS NEEDS TO BE THE FULLYQUALIFIED PATH
         let batch_filename = format!("batch-{}", date);
         let mut batch_file =
             File::create(&batch_filename).chain_err(|| "Could not create batch file")?;
         batch_file
-            .write_all(format!("{:#?}", self.batch).as_bytes())
+            .write_all(format!("{:#?}", self.batch).as_bytes()) // AND THIS NEEDS TO BE {}
             .chain_err(|| "Could not write to batch file")?;
         // Compression will be easy - just use as_compressed_bytes or something
 
@@ -123,8 +108,28 @@ impl Brain {
 
         Ok(())
     }
+    pub fn add_entry(&mut self, e: Entry, c: &Config) -> Result<()> {
+        self.batch.add_entry(e)?;
+        self.write_all(c)?;
+        Ok(())
+    }
 
     // maybe have a len() returning the hwo many emails we have
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Email {
+    pub filename: String,
+    pub contents: String,
+}
+
+impl Email {
+    fn new(path: &str) -> Result<Self> {
+        Ok(Email {
+            filename: path.into(),
+            contents: file_contents_from_str_path(path)?,
+        })
+    }
 }
 
 // TODO add arguments to only modify/read in parts of the whole thing

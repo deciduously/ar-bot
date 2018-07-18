@@ -3,7 +3,7 @@ use errors::*;
 use regex::Regex;
 use std::{fmt, str::FromStr};
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Product {
     CgBilling,
     CgTrans,
@@ -85,17 +85,29 @@ impl FromStr for Entry {
 
 // Can store multiple entries
 //
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BatchEntry {
     pub id: u32,
     pub products: Vec<Product>,
     //    pub times:
 }
 
+impl From<Entry> for BatchEntry {
+    fn from(e: Entry) -> Self {
+        BatchEntry {
+            id: e.id,
+            products: vec![e.product],
+        }
+    }
+}
+
 // The final batch
+// there should only be one BatchEntry per ID - that's literally the whole point of this app
+// Think about how to encode this constraint in the types
+// Maybe a HashMap?
 #[derive(Debug, PartialEq)]
 pub struct Batch {
-    entries: Vec<Entry>, // TODO this should be BatchEntry
+    entries: Vec<BatchEntry>,
 }
 
 impl Batch {
@@ -103,6 +115,44 @@ impl Batch {
         Batch {
             entries: Vec::new(),
         }
+    }
+
+    pub fn add_entry(&mut self, e: Entry) -> Result<()> {
+        // see if any BatchEntries share either an ID or both an ID and a product
+        let mut duplicate_id = false;
+        let mut duplicate_id_and_product = false;
+        let mut existing_entry = None;
+
+        let entries = self.entries.clone();
+
+        for be in &entries {
+            if be.id == e.id {
+                duplicate_id = true;
+                for p in &be.products {
+                    if p == &e.product {
+                        duplicate_id_and_product = true;
+                        break;
+                    }
+                }
+                existing_entry = Some(be.clone());
+                break;
+            }
+        }
+
+        println!("Inserting {}", e);
+
+        // if it's not a duplicate, just insert it
+        if !duplicate_id_and_product && !duplicate_id {
+            self.entries.push(BatchEntry::from(e));
+        } else if duplicate_id_and_product {
+            // if it's a full duplicate, just insert the time
+            // TODO times
+        } else {
+            // otherwise duplicate_id == true
+            // add the product to the proper BatchEntry
+            existing_entry.unwrap().products.push(e.product);
+        }
+        Ok(())
     }
 }
 
@@ -126,12 +176,14 @@ impl fmt::Display for Batch {
 impl FromStr for Batch {
     type Err = Error;
 
+    // TODO this is not correct
+    // you'll likely want a direct BatchEntry::from_str()
     fn from_str(s: &str) -> Result<Self> {
         // each line is an entry
         let lines = s.split('\n');
         let mut entries = Vec::new();
         for line in lines {
-            entries.push(Entry::from_str(line)?);
+            entries.push(BatchEntry::from(Entry::from_str(line)?));
         }
         Ok(Batch { entries })
     }
