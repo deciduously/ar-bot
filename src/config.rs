@@ -43,10 +43,11 @@ impl Default for Config {
 
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let c_p = self.config_path.clone().unwrap_or_else(|| "None given".into());
         write!(
             f,
-            "Ar-Bot Configuration:\n* Directory Settings:\n* * {}",
-            self.directory
+            "Ar-Bot Configuration:\n* Configuration file path: {}\n* Directory Settings:\n* * {}",
+            c_p, self.directory,
         )
     }
 }

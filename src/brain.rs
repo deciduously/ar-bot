@@ -4,7 +4,8 @@ use config::Config;
 use errors::*;
 use regex::Regex;
 use std::{
-    fs::{create_dir, read_dir}, path::{Path, PathBuf}, str::FromStr,
+    fs::{create_dir, read_dir, remove_dir_all, File}, io::prelude::*, path::{Path, PathBuf},
+    str::FromStr,
 };
 use util::file_contents_from_str_path;
 
@@ -33,7 +34,7 @@ impl Email {
 
 impl Brain {
     // Returns the current state of the brain - always succeeds.  If no brain exists, makes a new one
-    pub fn get(c: &Config) -> Result<Self> {
+    pub fn get_all(c: &Config) -> Result<Self> {
         lazy_static! {
             static ref BATCH_RE: Regex = Regex::new(r"^batch\d+.html").unwrap();
         }
@@ -92,15 +93,43 @@ impl Brain {
         println!("Brain:\n{:#?}\n", brain);
         Ok(brain)
     }
+
+    // Writes a full brain out
+    pub fn write_all(&self, c: &Config) -> Result<()> {
+        let path = Path::new(&c.directory.path);
+
+        // Start from scratch
+        remove_dir_all(path).chain_err(|| "Could not clean Brain")?;
+        create_dir(path).chain_err(|| "Could not write fresh Brain")?;
+
+        // write the batch
+        let date = "TEMPDATE";
+        let batch_filename = format!("batch-{}", date);
+        let mut batch_file =
+            File::create(&batch_filename).chain_err(|| "Could not create batch file")?;
+        batch_file
+            .write_all(format!("{:#?}", self.batch).as_bytes())
+            .chain_err(|| "Could not write to batch file")?;
+        // Compression will be easy - just use as_compressed_bytes or something
+
+        // write each email
+        for email in &self.emails {
+            let mut e_file =
+                File::create(&email.filename).chain_err(|| "Could not create email file")?;
+            e_file
+                .write_all(email.contents.as_bytes())
+                .chain_err(|| "Could not write to email file")?;
+        }
+
+        Ok(())
+    }
+
     // maybe have a len() returning the hwo many emails we have
 }
 
 // TODO add arguments to only modify/read in parts of the whole thing
 // low prio because the numbers are pretty small
-
-pub fn write_brain_dir(_b: &Brain) -> Result<()> {
-    unimplemented!()
-}
+// e.g. Brain::write_email(), Brain::get_email(), Brain::write_batch(), Brain::get_batch()
 
 #[cfg(test)]
 mod tests {
@@ -111,7 +140,7 @@ mod tests {
         // TODO how do we write this so its guaranteed to be empty?
         // A seprate Config::testing()?
         assert_eq!(
-            Brain::get(&Config::default()).unwrap(),
+            Brain::get_all(&Config::default()).unwrap(),
             Brain {
                 batch: Batch::new(),
                 emails: Vec::new(),

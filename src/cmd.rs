@@ -1,6 +1,6 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
 use batch::Entry;
-use brain::{write_brain_dir, Brain};
+use brain::Brain;
 use clap::{App, Arg};
 use config::{init_config, Config};
 use errors::*;
@@ -11,16 +11,16 @@ use util::file_contents_from_str_path;
 static VERSION: &'static str = "0.1.0";
 
 fn add(c: &Config, input_p: &str) -> Result<()> {
-    let brain = Brain::get(c)?;
+    let brain = Brain::get_all(c)?;
     let input = file_contents_from_str_path(input_p)?;
     println!("Input: {}\n", Entry::from_str(&input)?); // TODO, obviously
-    write_brain_dir(&brain)?;
+    Brain::write_all(&brain, c)?;
     Ok(())
 }
 
 fn preview(c: &Config) -> Result<()> {
-    let current_batch = Brain::get(c)?;
-    println!("{}\n", current_batch.batch);
+    let current_brain = Brain::get_all(c)?;
+    println!("{}\n", current_brain.batch);
     Ok(())
 }
 
