@@ -50,7 +50,7 @@ mod tests {
             init_config(Some("Alternate.toml")).unwrap(),
             Config {
                 directory: Directory {
-                    compressed: false,
+                    compressed: true,
                     path: "./storage/".into(),
                 }
             }
