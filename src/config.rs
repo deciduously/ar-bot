@@ -43,7 +43,7 @@ impl Default for Config {
 
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(
+        write!(
             f,
             "Ar-Bot Configuration:\n* Directory Settings:\n* * {}",
             self.directory
@@ -67,8 +67,9 @@ impl fmt::Display for Directory {
 }
 
 pub fn init_config(s: Option<&str>) -> Result<Config> {
-    let mut config: Config = toml::from_str(&file_contents_from_str_path(s.unwrap_or(DEFAULT_CONFIG))?)
-        .chain_err(|| "Could not read config file")?;
+    let mut config: Config = toml::from_str(&file_contents_from_str_path(s.unwrap_or(
+        DEFAULT_CONFIG,
+    ))?).chain_err(|| "Could not read config file")?;
     config.add_config_path(s.unwrap_or(DEFAULT_CONFIG))?;
     Ok(config)
 }

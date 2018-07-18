@@ -12,20 +12,20 @@ static VERSION: &'static str = "0.1.0";
 
 fn add(input_p: &str) -> Result<()> {
     let input = file_contents_from_str_path(input_p)?;
-    println!("Input: {}", Entry::from_str(&input)?); // TODO, obviously
+    println!("Input: {}\n", Entry::from_str(&input)?); // TODO, obviously
 
     Ok(())
 }
 
 fn preview() -> Result<()> {
     let current_batch = get_current_batch()?;
-    println!("{}", current_batch);
+    println!("{}\n", current_batch);
     Ok(())
 }
 
 fn report() -> Result<()> {
     // TODO, again
-    println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.");
+    println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.\n");
 
     Ok(())
 }
@@ -69,17 +69,15 @@ pub fn run() -> Result<()> {
         .get_matches();
 
     println!("AR-Bot v.{}\npass '-h' or '--help' for usage\n", VERSION);
-    
-    if matches.is_present("add") {
-        let _ = add(matches
-            .value_of("add")
-            .expect("Could not read INPUT_FILE"))
-            .chain_err(|| "Could not add input");
-    }
 
     let config =
         init_config(matches.value_of("config")).chain_err(|| "Could not load configuration")?;
-    println!("{}", config);
+    println!("{}\n", config);
+
+    if matches.is_present("add") {
+        let _ = add(matches.value_of("add").expect("Could not read INPUT_FILE"))
+            .chain_err(|| "Could not add input");
+    }
 
     if matches.is_present("preview") {
         preview()?;
@@ -88,6 +86,8 @@ pub fn run() -> Result<()> {
     if matches.is_present("report") {
         report()?;
     }
+
+    println!("Goodbye!");
 
     Ok(())
 }
