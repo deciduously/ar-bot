@@ -1,33 +1,30 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
 use batch::Entry;
-use brain::Brain;
+use brain::Context;
 use clap::{App, Arg};
-use config::{init_config, Config};
+use config::init_config;
 use errors::*;
 use std::str::FromStr;
-
 use util::file_contents_from_str_path;
 
 static VERSION: &'static str = "0.1.0";
 
 // Takes the given file path relative to crate root and adds its contents to the batch
-fn add(c: &Config, input_p: &str) -> Result<()> {
-    let mut brain = Brain::get_all(c)?;
+fn add(input_p: &str, ctx: &mut Context) -> Result<()> {
     let input = file_contents_from_str_path(input_p)?;
     let entry = Entry::from_str(&input)?;
-    brain.add_entry(entry, c)?;
+    ctx.brain.add_entry(entry)?;
     Ok(())
 }
 
 // Outputs the batch to the console
-fn preview(c: &Config) -> Result<()> {
-    let current_brain = Brain::get_all(c)?;
-    println!("{}\n", current_brain.batch);
+fn preview(ctx: &Context) -> Result<()> {
+    println!("{}\n", ctx.brain.batch);
     Ok(())
 }
 
 // Unimplemented!  This is a placeholder
-fn report(_c: &Config) -> Result<()> {
+fn report(_ctx: &Context) -> Result<()> {
     // TODO
     println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.\n");
 
@@ -79,12 +76,16 @@ pub fn run() -> Result<()> {
 
     println!("AR-Bot v.{}\npass '-h' or '--help' for usage\n", VERSION);
 
+    // Initialize configuration and read in Brain
     let config = init_config(matches.value_of("config"))
         .chain_err(|| "Could not load configuration file")
         .chain_err(|| "Could not make heads or tails of that abomination of a config file")?;
     println!("{}\n", config);
 
-    // TODO, instead of just a Config, pass around a Context with that and the Brain
+    // Grab a Context with a Brain
+    // this takes ownership of Config - all further access is via this ctx
+    // Because Rust is great, everything will clean itslef up nicely when ctx goes out of scope
+    let mut ctx = Context::initialize(config).chain_err(|| "Could not initialze config")?;
 
     // Call relative functions if their respective flags are present.
     // TODO smart preview with add - how SHOULD it be?
@@ -92,18 +93,20 @@ pub fn run() -> Result<()> {
 
     if matches.is_present("add") {
         let _ = add(
-            &config,
             matches.value_of("add").expect("Could not read INPUT_FILE"),
+            &mut ctx,
         ).chain_err(|| "Could not add input");
     }
 
     if matches.is_present("report") {
-        report(&config)?;
+        report(&ctx)?;
     }
 
     if matches.is_present("preview") {
-        preview(&config)?;
+        preview(&ctx)?;
     }
+    // Before quitting, write the Context back out
+    ctx.write_fs()?;
 
     println!("Goodbye!");
 

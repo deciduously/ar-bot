@@ -18,13 +18,56 @@ pub struct Brain {
 }
 
 impl Brain {
-    // Returns the current state of the brain - always succeeds.  If no brain exists, makes a new one
-    pub fn get_all(c: &Config) -> Result<Self> {
+    pub fn new() -> Self {
+        Brain {
+            batch: Batch::new(),
+            emails: Vec::new(),
+        }
+    }
+    pub fn add_entry(&mut self, e: Entry) -> Result<()> {
+        self.batch.add_entry(e)?;
+        Ok(())
+    }
+
+    // This just returns a prefilled Brain for testing purposes
+    #[cfg(test)]
+    fn test() -> Self {
+        Brain {
+            batch: Batch::test(),
+            emails: vec![Email {
+                filename: "sample_email.html".into(),
+                contents: TEST_COOL_STR.into(),
+            }],
+        }
+    }
+
+    // maybe have a len() returning the hwo many emails we have
+}
+
+// This is the running app state.  Is State a better name?
+#[derive(Debug)]
+pub struct Context {
+    pub config: Config,
+    pub brain: Brain,
+}
+
+impl Context {
+    // Take ownership over the fresh ones passed in
+    pub fn initialize(config: Config) -> Result<Self> {
+        let mut ctx = Context {
+            config,
+            brain: Brain::new(),
+        };
+        ctx.read_fs()?;
+        Ok(ctx)
+    }
+    // Reads the brain dir into memory from the dir specified in config.  If no brain exists, makes a new one
+    pub fn read_fs(&mut self) -> Result<()> {
         lazy_static! {
             static ref BATCH_RE: Regex = Regex::new(r"^batch\d+.html").unwrap();
         }
 
-        let path = &c.directory.path;
+        let path = &self.config.directory.path;
 
         // If no path exists, create it.
         // std::fs::create_dir will return an error if the path exists
@@ -71,16 +114,16 @@ impl Brain {
             Batch::from_str(&file_contents_from_str_path(current_batch_p)?)?
         };
 
-        // Put together the brain, persist it to disk, and return it
-        let brain = Brain { batch, emails };
-        println!("Brain:\n{:#?}\n", brain);
-        brain.write_all(c)?; // TODO do we need this here??  only if we built a fresh brain, really
-        Ok(brain)
-    }
+        // Put together the brain and store it back in the context
+        self.brain = Brain { batch, emails };
+        println!("Brain:\n{:#?}\n", self.brain);
 
-    // Writes a full brain out
-    pub fn write_all(&self, c: &Config) -> Result<()> {
-        let path = Path::new(&c.directory.path);
+        Ok(())
+    }
+    // Writes the in-memory brain out to the filesystem
+    pub fn write_fs(&self) -> Result<()> {
+        let prefix = &self.config.directory.path;
+        let path = Path::new(prefix);
 
         // Start from scratch
         remove_dir_all(path).chain_err(|| "Could not clean Brain")?;
@@ -88,18 +131,18 @@ impl Brain {
 
         // write the batch
         let date = "TEMPDATE";
-        let prefix = &c.directory.path;
+
         // FIXME this should be more explicit than a dot expansion
         let batch_filename = format!("./{}/batch-{}", prefix, date);
         let mut batch_file =
             File::create(&batch_filename).chain_err(|| "Could not create batch file")?;
         batch_file
-            .write_all(format!("{:#?}", self.batch).as_bytes()) // AND THIS NEEDS TO BE {}
+            .write_all(format!("{:#?}", self.brain.batch).as_bytes()) // AND THIS NEEDS TO BE {}
             .chain_err(|| "Could not write to batch file")?;
         // Compression will be easy - just use as_compressed_bytes or something
 
         // write each email
-        for email in &self.emails {
+        for email in &self.brain.emails {
             let mut e_file =
                 File::create(&email.filename).chain_err(|| "Could not create email file")?;
             e_file
@@ -109,25 +152,6 @@ impl Brain {
 
         Ok(())
     }
-    pub fn add_entry(&mut self, e: Entry, c: &Config) -> Result<()> {
-        self.batch.add_entry(e)?;
-        self.write_all(c)?;
-        Ok(())
-    }
-
-    // This just returns a prefilled Brain for testing purposes
-    #[cfg(test)]
-    fn test() -> Self {
-        Brain {
-            batch: Batch::test(),
-            emails: vec![Email {
-                filename: "sample_email.html".into(),
-                contents: TEST_COOL_STR.into(),
-            }],
-        }
-    }
-
-    // maybe have a len() returning the hwo many emails we have
 }
 
 #[derive(Debug, PartialEq)]
@@ -137,7 +161,7 @@ pub struct Email {
 }
 
 impl Email {
-    fn new(path: &str) -> Result<Self> {
+    pub fn new(path: &str) -> Result<Self> {
         Ok(Email {
             filename: path.into(),
             contents: file_contents_from_str_path(path)?,
@@ -154,13 +178,23 @@ mod tests {
     use super::*;
 
     #[test]
+    // this is actually more like read_fs()
     fn test_get_current_batch() {
-        // add the entry to the running test batch
-        let mut batch = Batch::new();
-        batch.add_entry(Entry::test()).unwrap();
+        // Start with fresh test dir
+        ::std::fs::remove_dir_all("./test/")
+            .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
 
-        let test_brain = Brain::test();
-        assert_eq!(Brain::get_all(&Config::test()).unwrap(), test_brain);
+        // add the entry to the running test batch
+        let mut test_context = Context::initialize(Config::test()).unwrap();
+        test_context.brain.batch.add_entry(Entry::test()).unwrap();
+
+        // write it out, read it in
+        test_context.read_fs().unwrap();
+        test_context.write_fs().unwrap();
+
+        assert_eq!(test_context.brain, Brain::test());
+
+        // Clean up test dir
         ::std::fs::remove_dir_all("./test/")
             .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
     }
