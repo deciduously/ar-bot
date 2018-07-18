@@ -68,13 +68,14 @@ pub fn run() -> Result<()> {
         )
         .get_matches();
 
+    println!("AR-Bot v.{}\npass '-h' or '--help' for usage\n", VERSION);
+    
     if matches.is_present("add") {
         let _ = add(matches
             .value_of("add")
             .expect("Could not read INPUT_FILE"))
             .chain_err(|| "Could not add input");
     }
-    println!("AR-Bot v.{}\npass '-h' or '--help' for usage\n", VERSION);
 
     let config =
         init_config(matches.value_of("config")).chain_err(|| "Could not load configuration")?;

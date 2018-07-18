@@ -57,7 +57,7 @@ pub struct Entry {
 
 impl fmt::Display for Entry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ID: {}, PRODUCT {:?}", self.id, self.product)
+        write!(f, "ID: {}, PRODUCT {}", self.id, self.product)
     }
 }
 
