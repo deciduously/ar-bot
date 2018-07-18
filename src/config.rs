@@ -33,7 +33,11 @@ impl Default for Config {
 
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "Ar-Bot Configuration:\n* Directory Settings:\n* * {}", self.directory)
+        writeln!(
+            f,
+            "Ar-Bot Configuration:\n* Directory Settings:\n* * {}",
+            self.directory
+        )
     }
 }
 
@@ -44,7 +48,11 @@ impl fmt::Display for Directory {
             compressed_string.push_str("not ")
         }
         compressed_string.push_str("using");
-        write!(f, "Brain path: {} - {} compression", self.path, compressed_string)
+        write!(
+            f,
+            "Brain path: {} - {} compression",
+            self.path, compressed_string
+        )
     }
 }
 

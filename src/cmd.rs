@@ -19,6 +19,13 @@ fn preview() -> Result<()> {
     Ok(())
 }
 
+fn report() -> Result<()> {
+    // TODO, again
+    println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.:");
+
+    Ok(())
+}
+
 // This is the entrypoint - essentially main()
 pub fn run() -> Result<()> {
     let matches = App::new("ar-bot")
@@ -59,7 +66,7 @@ pub fn run() -> Result<()> {
 
     if matches.is_present("add") {
         let _ = add(matches
-            .value_of("INPUT_FILE")
+            .value_of("input")
             .expect("Could not read INPUT_FILE"))
             .chain_err(|| "Could not add input");
     }
@@ -70,6 +77,10 @@ pub fn run() -> Result<()> {
 
     if matches.is_present("preview") {
         preview()?;
+    }
+
+    if matches.is_present("report") {
+        report()?;
     }
 
     Ok(())

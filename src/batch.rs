@@ -96,7 +96,8 @@ impl fmt::Display for Batch {
         if self.entries.is_empty() {
             write!(f, "No entries")
         } else {
-            let entries_strs: Vec<String> = self.entries.iter().map(|e| format!("{:#?}", e)).collect();
+            let entries_strs: Vec<String> =
+                self.entries.iter().map(|e| format!("{:#?}", e)).collect();
             let mut entries = String::new();
             for e in entries_strs {
                 entries.push_str(&e);
