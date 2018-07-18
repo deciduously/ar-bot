@@ -15,7 +15,7 @@ fn add(input_p: &str) -> Result<()> {
 
 fn preview() -> Result<()> {
     let current_batch = get_current_batch()?;
-    println!("{:#?}", current_batch);
+    println!("{}", current_batch);
     Ok(())
 }
 
@@ -65,8 +65,8 @@ pub fn run() -> Result<()> {
     }
 
     let config =
-        init_config(matches.value_of("config")).chain_err(|| "Could not load configuration");
-    println!("{:#?}", config);
+        init_config(matches.value_of("config")).chain_err(|| "Could not load configuration")?;
+    println!("{}", config);
 
     if matches.is_present("preview") {
         preview()?;

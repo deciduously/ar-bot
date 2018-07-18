@@ -90,6 +90,22 @@ impl Batch {
     }
 }
 
+impl fmt::Display for Batch {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let _ = writeln!(f, "Current Batch:");
+        if self.entries.is_empty() {
+            write!(f, "No entries")
+        } else {
+            let entries_strs: Vec<String> = self.entries.iter().map(|e| format!("{:#?}", e)).collect();
+            let mut entries = String::new();
+            for e in entries_strs {
+                entries.push_str(&e);
+            }
+            write!(f, "{}", entries)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

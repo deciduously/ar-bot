@@ -1,5 +1,6 @@
 // config.rs handles loading and eventually writing to the app configuration
 use errors::*;
+use std::fmt;
 use toml;
 use util::file_contents_from_str_path;
 
@@ -27,6 +28,23 @@ impl Default for Config {
                 path: "./brain/".into(),
             },
         }
+    }
+}
+
+impl fmt::Display for Config {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Ar-Bot Configuration:\n* Directory Settings:\n* * {}", self.directory)
+    }
+}
+
+impl fmt::Display for Directory {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut compressed_string = String::new();
+        if !self.compressed {
+            compressed_string.push_str("not ")
+        }
+        compressed_string.push_str("using");
+        write!(f, "Brain path: {} - {} compression", self.path, compressed_string)
     }
 }
 
