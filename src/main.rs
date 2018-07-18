@@ -16,6 +16,7 @@ extern crate serde_derive;
 extern crate toml;
 
 mod batch;
+mod brain;
 mod cmd;
 mod config;
 mod errors {

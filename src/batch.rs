@@ -69,7 +69,7 @@ impl FromStr for Entry {
 
 // Can store multiple entries
 //
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct BatchEntry {
     pub id: u32,
     pub products: Vec<Product>,
@@ -77,6 +77,7 @@ pub struct BatchEntry {
 }
 
 // The final batch
+#[derive(Debug, PartialEq)]
 pub struct Batch {
     entries: Vec<BatchEntry>,
 }

@@ -1,4 +1,5 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
+use brain::get_current_batch;
 use clap::{App, Arg};
 use config::init_config;
 use errors::*;
@@ -9,6 +10,12 @@ fn add(input_p: &str) -> Result<()> {
     let input = file_contents_from_str_path(input_p)?;
     println!("Input: {}", input); // TODO, obviously
 
+    Ok(())
+}
+
+fn preview() -> Result<()> {
+    let current_batch = get_current_batch()?;
+    println!("{:#?}", current_batch);
     Ok(())
 }
 
@@ -58,8 +65,12 @@ pub fn run() -> Result<()> {
     }
 
     let config =
-        init_config(matches.value_of("CONFIG_FILE")).chain_err(|| "Could not load configuration");
+        init_config(matches.value_of("config")).chain_err(|| "Could not load configuration");
     println!("{:#?}", config);
+
+    if matches.is_present("preview") {
+        preview()?;
+    }
 
     Ok(())
 }
