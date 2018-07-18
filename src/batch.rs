@@ -95,7 +95,7 @@ pub struct BatchEntry {
 // The final batch
 #[derive(Debug, PartialEq)]
 pub struct Batch {
-    entries: Vec<BatchEntry>,
+    entries: Vec<Entry>, // TODO this should be BatchEntry
 }
 
 impl Batch {
@@ -120,6 +120,20 @@ impl fmt::Display for Batch {
             }
             write!(f, "{}", entries)
         }
+    }
+}
+
+impl FromStr for Batch {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        // each line is an entry
+        let lines = s.split('\n');
+        let mut entries = Vec::new();
+        for line in lines {
+            entries.push(Entry::from_str(line)?);
+        }
+        Ok(Batch { entries })
     }
 }
 
