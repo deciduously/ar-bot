@@ -11,8 +11,8 @@ static DEFAULT_CONFIG: &'static str = "Bot.toml";
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct Config {
-    config_path: Option<String>, // Workaround so we can fill it in during initialiation without an intermediate struct
-    directory: Directory,
+    pub config_path: Option<String>, // Workaround so we can fill it in during initialiation without an intermediate struct
+    pub directory: Directory,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]

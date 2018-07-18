@@ -1,6 +1,6 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
 use batch::Entry;
-use brain::{get_current_batch, write_brain_dir, Brain};
+use brain::{write_brain_dir, Brain};
 use clap::{App, Arg};
 use config::{init_config, Config};
 use errors::*;
@@ -19,8 +19,8 @@ fn add(c: &Config, input_p: &str) -> Result<()> {
 }
 
 fn preview(c: &Config) -> Result<()> {
-    let current_batch = get_current_batch(c)?;
-    println!("{}\n", current_batch);
+    let current_batch = Brain::get(c)?;
+    println!("{}\n", current_batch.batch);
     Ok(())
 }
 
@@ -45,6 +45,7 @@ pub fn run() -> Result<()> {
                 .help("Add a new file to the register")
                 .takes_value(true),
         )
+        // THis one will be a subcommand with subcommands
         .arg(
             Arg::with_name("config")
                 .short("c")
@@ -67,6 +68,9 @@ pub fn run() -> Result<()> {
                 .takes_value(false)
                 .help("Daily report comparing inputs to outputs for the day"),
         )
+        // Arg cleanup
+        // Arg search_hx - maybe use ripgrep!
+        // Arg send
         .get_matches();
 
     println!("AR-Bot v.{}\npass '-h' or '--help' for usage\n", VERSION);
@@ -75,7 +79,7 @@ pub fn run() -> Result<()> {
         init_config(matches.value_of("config")).chain_err(|| "Could not load configuration")?;
     println!("{}\n", config);
 
-    // TODO, instead of just a COnfig, pass around a Context with that and the Brain
+    // TODO, instead of just a Cnfig, pass around a Context with that and the Brain
 
     if matches.is_present("add") {
         let _ = add(

@@ -42,7 +42,7 @@ impl fmt::Display for Product {
             CampKaleTrans => write!(f, "Kaleidoscope Transportation"),
             CampKingTuit => write!(f, "Kingswood Tuition"),
             CampKingTrans => write!(f, "Kingswood Transportation"),
-            Other(s) => write!(f, "Non-builtin: {}", s),
+            Other(s) => write!(f, "Non-builtin product {}", s),
         }
     }
 }
