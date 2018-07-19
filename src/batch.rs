@@ -1,4 +1,5 @@
 // batch.rs handles the string parsing and batching logic for eliminating redundant line items
+use chrono::prelude::*;
 use errors::*;
 use regex::Regex;
 use std::{fmt, str::FromStr};
@@ -54,7 +55,7 @@ impl fmt::Display for Product {
 pub struct Entry {
     pub id: u32,
     pub product: Product,
-    // pub time: Something,
+    pub time: DateTime<Utc>,
 }
 
 impl Entry {
@@ -64,6 +65,7 @@ impl Entry {
         Entry {
             id: 12345,
             product: Product::from_str("COOL_PROD").unwrap(),
+            time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
         }
     }
 }
@@ -77,6 +79,10 @@ impl fmt::Display for Entry {
 impl FromStr for Entry {
     type Err = Error;
 
+    // TODO this will eventually be getting a whole email
+    // including headers, time, etc
+    // instead of Utc::now(), store whatever time the email was received
+    // For now, this is close enough
     fn from_str(s: &str) -> Result<Self> {
         lazy_static! {
             static ref AD_RE: Regex = Regex::new(r"^The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>.+) Has Changed You need to verify the Autodraft is now correct").unwrap();
@@ -89,6 +95,7 @@ impl FromStr for Entry {
                     .parse::<u32>()
                     .chain_err(|| "Could not read iMIS id")?,
                 product: Product::from_str(&captures["product"])?,
+                time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
             })
         } else {
             bail!("Couldn't match Regex")
@@ -97,12 +104,17 @@ impl FromStr for Entry {
 }
 
 // Can store multiple entries
-//
 #[derive(Clone, Debug, PartialEq)]
 pub struct BatchEntry {
     pub id: u32,
     pub products: Vec<Product>,
-    //    pub times:
+    pub times: Vec<DateTime<Utc>>,
+}
+
+impl fmt::Display for BatchEntry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}: {:?} at {:?}", self.id, self.products, self.times)
+    }
 }
 
 impl From<Entry> for BatchEntry {
@@ -110,6 +122,7 @@ impl From<Entry> for BatchEntry {
         BatchEntry {
             id: e.id,
             products: vec![e.product],
+            times: vec![e.time],
         }
     }
 }
@@ -185,8 +198,7 @@ impl fmt::Display for Batch {
         if self.entries.is_empty() {
             write!(f, "No entries")
         } else {
-            let entries_strs: Vec<String> =
-                self.entries.iter().map(|e| format!("{:#?}", e)).collect();
+            let entries_strs: Vec<String> = self.entries.iter().map(|e| format!("{}", e)).collect();
             let mut entries = String::new();
             for e in entries_strs {
                 entries.push_str(&e);
@@ -223,6 +235,7 @@ mod tests {
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),
+                time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
             },
         )
     }

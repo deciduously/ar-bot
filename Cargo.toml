@@ -5,6 +5,7 @@ authors = ["deciduously <github@deciduously.com>"]
 
 [dependencies]
 
+chrono = "0.4"
 clap = "2"
 error-chain = "0.12"
 lazy_static = "1.0"

@@ -34,6 +34,7 @@ With no config given it will default to `Bot.toml`, and with no flags or options
 
 ## Crates
 
+* [chrono](https://github.com/chronotope/chrono)
 * [clap](https://github.com/kbknapp/clap-rs)
 * [error-chain](https://github.com/rust-lang-nursery/error-chain)
 * [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs)

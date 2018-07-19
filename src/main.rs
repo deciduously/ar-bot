@@ -1,6 +1,7 @@
 // main.rs is the entry point of the executable
 #![recursion_limit = "1024"]
 
+extern crate chrono;
 extern crate clap;
 #[macro_use]
 extern crate error_chain;

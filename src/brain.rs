@@ -4,7 +4,7 @@ use config::Config;
 use errors::*;
 use regex::Regex;
 use std::{
-    fs::{create_dir, read_dir, remove_dir_all, File}, io::prelude::*, path::{Path, PathBuf},
+    fmt, fs::{create_dir, read_dir, remove_dir_all, File}, io::prelude::*, path::{Path, PathBuf},
     str::FromStr,
 };
 use util::*;
@@ -50,6 +50,12 @@ impl Brain {
     }
 
     // maybe have a len() returning the hwo many emails we have
+}
+
+impl fmt::Display for Brain {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "batch: {}\nemails: {:?}", self.batch, self.emails)
+    }
 }
 
 // This is the running app state.  Is State a better name?
@@ -129,7 +135,7 @@ impl Context {
 
         // Put together the brain and store it back in the context
         self.brain = Brain { batch, emails };
-        println!("Brain:\n{:#?}\n", self.brain);
+        println!("Brain:\n{}\n", self.brain);
 
         Ok(())
     }
@@ -150,7 +156,7 @@ impl Context {
         let mut batch_file =
             File::create(&batch_filename).chain_err(|| "Could not create batch file")?;
         batch_file
-            .write_all(format!("{:#?}", self.brain.batch).as_bytes()) // AND THIS NEEDS TO BE {}
+            .write_all(format!("{}", self.brain.batch).as_bytes())
             .chain_err(|| "Could not write to batch file")?;
         // Compression will be easy - just use as_compressed_bytes or something
 
