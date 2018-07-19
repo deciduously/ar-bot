@@ -7,7 +7,7 @@ use std::{
     fs::{create_dir, read_dir, remove_dir_all, File}, io::prelude::*, path::{Path, PathBuf},
     str::FromStr,
 };
-use util::file_contents_from_str_path;
+use util::*;
 
 // This is my internal folder
 // I want to be able to serialize/deserialize the contents
@@ -74,7 +74,7 @@ impl Brain {
         // Put together the brain, persist it to disk, and return it
         let brain = Brain { batch, emails };
         println!("Brain:\n{:#?}\n", brain);
-        let _ = brain.write_all(c)?; // TODO do we need this here??  only if we built a fresh brain, really
+        brain.write_all(c)?; // TODO do we need this here??  only if we built a fresh brain, really
         Ok(brain)
     }
 
@@ -88,8 +88,9 @@ impl Brain {
 
         // write the batch
         let date = "TEMPDATE";
-        // THIS NEEDS TO BE THE FULLYQUALIFIED PATH
-        let batch_filename = format!("batch-{}", date);
+        let prefix = &c.directory.path;
+        // FIXME this should be more explicit than a dot expansion
+        let batch_filename = format!("./{}/batch-{}", prefix, date);
         let mut batch_file =
             File::create(&batch_filename).chain_err(|| "Could not create batch file")?;
         batch_file
@@ -112,6 +113,18 @@ impl Brain {
         self.batch.add_entry(e)?;
         self.write_all(c)?;
         Ok(())
+    }
+
+    // This just returns a prefilled Brain for testing purposes
+    #[cfg(test)]
+    fn test() -> Self {
+        Brain {
+            batch: Batch::test(),
+            emails: vec![Email {
+                filename: "sample_email.html".into(),
+                contents: TEST_COOL_STR.into(),
+            }],
+        }
     }
 
     // maybe have a len() returning the hwo many emails we have
@@ -142,14 +155,13 @@ mod tests {
 
     #[test]
     fn test_get_current_batch() {
-        // TODO how do we write this so its guaranteed to be empty?
-        // A seprate Config::testing()?
-        assert_eq!(
-            Brain::get_all(&Config::default()).unwrap(),
-            Brain {
-                batch: Batch::new(),
-                emails: Vec::new(),
-            }
-        )
+        // add the entry to the running test batch
+        let mut batch = Batch::new();
+        batch.add_entry(Entry::test()).unwrap();
+
+        let test_brain = Brain::test();
+        assert_eq!(Brain::get_all(&Config::test()).unwrap(), test_brain);
+        ::std::fs::remove_dir_all("./test/")
+            .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
     }
 }

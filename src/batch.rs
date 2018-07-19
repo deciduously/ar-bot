@@ -2,6 +2,8 @@
 use errors::*;
 use regex::Regex;
 use std::{fmt, str::FromStr};
+#[cfg(test)]
+use util::TEST_COOL_STR;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Product {
@@ -53,6 +55,17 @@ pub struct Entry {
     pub id: u32,
     pub product: Product,
     // pub time: Something,
+}
+
+impl Entry {
+    // For testing purposes
+    #[cfg(test)]
+    pub fn test() -> Self {
+        Entry {
+            id: 12345,
+            product: Product::from_str("COOL_PROD").unwrap(),
+        }
+    }
 }
 
 impl fmt::Display for Entry {
@@ -145,14 +158,24 @@ impl Batch {
         if !duplicate_id_and_product && !duplicate_id {
             self.entries.push(BatchEntry::from(e));
         } else if duplicate_id_and_product {
-            // if it's a full duplicate, just insert the time
-            // TODO times
+            // the only thing I push is the time, and I haven't done those yet
+            unimplemented!()
         } else {
             // otherwise duplicate_id == true
             // add the product to the proper BatchEntry
             existing_entry.unwrap().products.push(e.product);
         }
         Ok(())
+    }
+
+    #[cfg(test)]
+    // Test batch with one entry inserted
+    pub fn test() -> Self {
+        let mut batch = Batch::new();
+        batch
+            .add_entry(Entry::from_str(TEST_COOL_STR).unwrap())
+            .unwrap();
+        batch
     }
 }
 
@@ -191,29 +214,31 @@ impl FromStr for Batch {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_entry_from_str() {
-        use super::*;
-
-        let input_str = "The Cool Invoice For iMIS ID 12345 For the Product COOL_PROD Has Changed You need to verify the Autodraft is now correct";
         assert_eq!(
+            Entry::from_str(TEST_COOL_STR).unwrap(),
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),
             },
-            Entry::from_str(input_str).unwrap()
         )
     }
     #[test]
     fn test_add_entry_to_empty_batch() {
-        assert_eq!("Write", "Me")
+        let mut batch = Batch::new();
+        batch.add_entry(Entry::test()).unwrap();
+        let test_batch = Batch::test();
+        assert_eq!(batch, test_batch)
     }
-    #[test]
-    fn test_add_entry_duplicate_id() {
-        assert_eq!("Write", "Me")
-    }
-    #[test]
-    fn test_add_entry_duplicate_id_and_product() {
-        assert_eq!("Write", "Me")
-    }
+    //#[test]
+    //fn test_add_entry_duplicate_id() {
+    //    assert_eq!("Write", "Me")
+    //}
+    //#[test]
+    //fn test_add_entry_duplicate_id_and_product() {
+    //    assert_eq!("Write", "Me"
+    //}
 }

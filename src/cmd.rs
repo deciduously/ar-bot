@@ -10,21 +10,23 @@ use util::file_contents_from_str_path;
 
 static VERSION: &'static str = "0.1.0";
 
+// Takes the given file path relative to crate root and adds its contents to the batch
 fn add(c: &Config, input_p: &str) -> Result<()> {
     let mut brain = Brain::get_all(c)?;
     let input = file_contents_from_str_path(input_p)?;
     let entry = Entry::from_str(&input)?;
-    println!("Input: {}\n", entry);
     brain.add_entry(entry, c)?;
     Ok(())
 }
 
+// Outputs the batch to the console
 fn preview(c: &Config) -> Result<()> {
     let current_brain = Brain::get_all(c)?;
     println!("{}\n", current_brain.batch);
     Ok(())
 }
 
+// Unimplemented!  This is a placeholder
 fn report(_c: &Config) -> Result<()> {
     // TODO
     println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.\n");
@@ -34,6 +36,7 @@ fn report(_c: &Config) -> Result<()> {
 
 // This is the entrypoint - essentially main()
 pub fn run() -> Result<()> {
+    // clap config
     let matches = App::new("ar-bot")
         .version(VERSION)
         .author("deciduously <bendlovy@gmail.com>") // TODO read this from Cargo.toml?!
@@ -76,11 +79,16 @@ pub fn run() -> Result<()> {
 
     println!("AR-Bot v.{}\npass '-h' or '--help' for usage\n", VERSION);
 
-    let config =
-        init_config(matches.value_of("config")).chain_err(|| "Could not load configuration")?;
+    let config = init_config(matches.value_of("config"))
+        .chain_err(|| "Could not load configuration file")
+        .chain_err(|| "Could not make heads or tails of that abomination of a config file")?;
     println!("{}\n", config);
 
     // TODO, instead of just a Config, pass around a Context with that and the Brain
+
+    // Call relative functions if their respective flags are present.
+    // TODO smart preview with add - how SHOULD it be?
+    // For now, I'm calling preview last so that we always dislay the end result of the batch
 
     if matches.is_present("add") {
         let _ = add(
@@ -89,12 +97,12 @@ pub fn run() -> Result<()> {
         ).chain_err(|| "Could not add input");
     }
 
-    if matches.is_present("preview") {
-        preview(&config)?;
-    }
-
     if matches.is_present("report") {
         report(&config)?;
+    }
+
+    if matches.is_present("preview") {
+        preview(&config)?;
     }
 
     println!("Goodbye!");

@@ -29,13 +29,26 @@ impl Config {
     // TODO add more self mutations here, use Clap subcommands to provide easy access
 }
 
+impl Config {
+    #[cfg(test)]
+    pub fn test() -> Self {
+        Config {
+            config_path: Some("Test.toml".into()),
+            directory: Directory {
+                compressed: false,
+                path: "test".into(),
+            },
+        }
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         Config {
             config_path: Some("Bot.toml".into()),
             directory: Directory {
                 compressed: false,
-                path: "./brain/".into(),
+                path: "brain".into(),
             },
         }
     }
@@ -70,9 +83,11 @@ impl fmt::Display for Directory {
 }
 
 pub fn init_config(s: Option<&str>) -> Result<Config> {
-    let mut config: Config = toml::from_str(&file_contents_from_str_path(s.unwrap_or(
-        DEFAULT_CONFIG,
-    ))?).chain_err(|| "Could not read config file")?;
+    // FIXME why are we reading DEFAULT_CONFIG twice
+    let mut config: Config =
+        toml::from_str(&file_contents_from_str_path(s.unwrap_or(DEFAULT_CONFIG))
+            .chain_err(|| "Could not find config file")?)
+            .chain_err(|| "Could not read config file")?;
     config.add_config_path(s.unwrap_or(DEFAULT_CONFIG))?;
     Ok(config)
 }
@@ -93,7 +108,7 @@ mod tests {
                 config_path: Some("Alternate.toml".into()),
                 directory: Directory {
                     compressed: true,
-                    path: "./storage/".into(),
+                    path: "storage".into(),
                 }
             }
         )
