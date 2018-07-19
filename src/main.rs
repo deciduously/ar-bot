@@ -9,6 +9,7 @@ extern crate lazy_static;
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
+extern crate rand;
 extern crate regex;
 extern crate serde;
 #[macro_use]
@@ -29,14 +30,14 @@ use cmd::run;
 fn main() {
     // Immediately call into a properly error-chained fn
     if let Err(ref e) = run() {
-        println!("error: {}", e);
+        eprintln!("error: {}", e);
 
         for e in e.iter().skip(1) {
-            println!("caused by: {}", e);
+            eprintln!("caused by: {}", e);
         }
 
         if let Some(backtrace) = e.backtrace() {
-            println!("backtrace: {:?}", backtrace);
+            eprintln!("backtrace: {:?}", backtrace);
         }
 
         ::std::process::exit(1);

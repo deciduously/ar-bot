@@ -8,6 +8,7 @@ authors = ["deciduously <github@deciduously.com>"]
 clap = "2"
 error-chain = "0.12"
 lazy_static = "1.0"
+rand = "0.5"
 regex = "1"
 serde = "1"
 serde_derive = "1"

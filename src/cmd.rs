@@ -1,10 +1,8 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
-use batch::Entry;
 use brain::Context;
 use clap::{App, Arg};
 use config::init_config;
 use errors::*;
-use std::str::FromStr;
 use util::file_contents_from_str_path;
 
 static VERSION: &'static str = "0.1.0";
@@ -12,13 +10,12 @@ static VERSION: &'static str = "0.1.0";
 // Takes the given file path relative to crate root and adds its contents to the batch
 fn add(input_p: &str, ctx: &mut Context) -> Result<()> {
     let input = file_contents_from_str_path(input_p)?;
-    let entry = Entry::from_str(&input)?;
-    ctx.brain.add_entry(entry)?;
+    ctx.add_entry(input)?;
     Ok(())
 }
 
 // Outputs the batch to the console
-fn preview(ctx: &Context) -> Result<()> {
+fn preview(ctx: &mut Context) -> Result<()> {
     println!("{}\n", ctx.brain.batch);
     Ok(())
 }
@@ -103,10 +100,8 @@ pub fn run() -> Result<()> {
     }
 
     if matches.is_present("preview") {
-        preview(&ctx)?;
+        preview(&mut ctx)?;
     }
-    // Before quitting, write the Context back out
-    ctx.write_fs()?;
 
     println!("Goodbye!");
 

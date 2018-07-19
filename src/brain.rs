@@ -24,8 +24,13 @@ impl Brain {
             emails: Vec::new(),
         }
     }
-    pub fn add_entry(&mut self, e: Entry) -> Result<()> {
-        self.batch.add_entry(e)?;
+    pub fn add_entry(&mut self, e: String) -> Result<()> {
+        // Store the raw contents
+        self.emails.push(Email::from_str(&e)?);
+
+        // add entry to the batch
+        self.batch.add_entry(Entry::from_str(&e)?)?;
+
         Ok(())
     }
 
@@ -35,7 +40,7 @@ impl Brain {
         Brain {
             batch: Batch::test(),
             emails: vec![Email {
-                filename: "sample_email.html".into(),
+                filename: "TEMPDATE.html".into(),
                 contents: TEST_COOL_STR.into(),
             }],
         }
@@ -64,10 +69,10 @@ impl Context {
     // Reads the brain dir into memory from the dir specified in config.  If no brain exists, makes a new one
     pub fn read_fs(&mut self) -> Result<()> {
         lazy_static! {
-            static ref BATCH_RE: Regex = Regex::new(r"^batch\d+.html").unwrap();
+            static ref BATCH_RE: Regex = Regex::new(r"^batch-TEMPDATE.html").unwrap();
         }
 
-        let path = &self.config.directory.path;
+        let path = &format!("{}/", self.config.directory.path);
 
         // If no path exists, create it.
         // std::fs::create_dir will return an error if the path exists
@@ -90,6 +95,7 @@ impl Context {
             .chain_err(|| "Could not read brain!")?
             .map(|f| f.expect("Could not read brain entry").path())
             .collect();
+        println!("{:#?}", dir_listing);
 
         // Grab the current batch
         // Save any emails
@@ -122,7 +128,7 @@ impl Context {
     }
     // Writes the in-memory brain out to the filesystem
     pub fn write_fs(&self) -> Result<()> {
-        let prefix = &self.config.directory.path;
+        let prefix = &format!("{}/", self.config.directory.path);
         let path = Path::new(prefix);
 
         // Start from scratch
@@ -133,7 +139,7 @@ impl Context {
         let date = "TEMPDATE";
 
         // FIXME this should be more explicit than a dot expansion
-        let batch_filename = format!("./{}/batch-{}", prefix, date);
+        let batch_filename = format!("{}batch-{}.html", prefix, date);
         let mut batch_file =
             File::create(&batch_filename).chain_err(|| "Could not create batch file")?;
         batch_file
@@ -142,6 +148,7 @@ impl Context {
         // Compression will be easy - just use as_compressed_bytes or something
 
         // write each email
+        //
         for email in &self.brain.emails {
             let mut e_file =
                 File::create(&email.filename).chain_err(|| "Could not create email file")?;
@@ -151,6 +158,18 @@ impl Context {
         }
 
         Ok(())
+    }
+    // Have Brain::add_entry insert it properly, then persist it to disk
+    pub fn add_entry(&mut self, e: String) -> Result<()> {
+        self.brain.add_entry(e)?;
+        self.write_fs()?;
+        Ok(())
+    }
+    // BE CAREFUL - empties itself out.  Potential data loss if you call write_fs() afterwards
+    // this is for testing purposes only
+    #[cfg(test)]
+    pub fn clean(&mut self) {
+        self.brain = Brain::new();
     }
 }
 
@@ -169,6 +188,17 @@ impl Email {
     }
 }
 
+impl FromStr for Email {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Ok(Email {
+            filename: format!("TEMPDATE.html"),
+            contents: s.into(),
+        })
+    }
+}
+
 // TODO add arguments to only modify/read in parts of the whole thing
 // low prio because the numbers are pretty small
 // e.g. Brain::write_email(), Brain::get_email(), Brain::write_batch(), Brain::get_batch()
@@ -176,26 +206,27 @@ impl Email {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn test_add_entry_brain() {
+        let mut test_context: Context = Context::initialize(Config::test()).unwrap();
+        test_context.brain.add_entry(TEST_COOL_STR.into()).unwrap();
+        assert_eq!(test_context.brain, Brain::test())
+    }
 
     #[test]
     // this is actually more like read_fs()
-    fn test_get_current_batch() {
+    fn test_read_fs() {
         // Start with fresh test dir
-        ::std::fs::remove_dir_all("./test/")
+        ::std::fs::remove_dir_all("test/")
             .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
 
         // add the entry to the running test batch
-        let mut test_context = Context::initialize(Config::test()).unwrap();
-        test_context.brain.batch.add_entry(Entry::test()).unwrap();
+        let mut test_context: Context = Context::initialize(Config::test()).unwrap();
+        test_context.add_entry(TEST_COOL_STR.into()).unwrap();
 
-        // write it out, read it in
+        // Clear memory, and re-read from fs
+        test_context.clean();
         test_context.read_fs().unwrap();
-        test_context.write_fs().unwrap();
-
-        assert_eq!(test_context.brain, Brain::test());
-
-        // Clean up test dir
-        ::std::fs::remove_dir_all("./test/")
-            .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
+        assert_eq!(test_context.brain, Brain::test())
     }
 }
