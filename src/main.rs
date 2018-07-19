@@ -9,6 +9,7 @@ extern crate lazy_static;
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
+#[cfg(test)]
 extern crate rand;
 extern crate regex;
 extern crate serde;

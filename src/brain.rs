@@ -24,12 +24,17 @@ impl Brain {
             emails: Vec::new(),
         }
     }
-    pub fn add_entry(&mut self, e: String) -> Result<()> {
-        // Store the raw contents
-        self.emails.push(Email::from_str(&e)?);
+    pub fn add_entry(&mut self, input_p: &str) -> Result<()> {
+        // Read the file given into contents
+        println!("Brain::add_entry input: {}", input_p);
+        let contents = file_contents_from_str_path(input_p)?;
+        println!("Brian::add_entry: {} {}", input_p, contents);
+
+        // add raw email to brain
+        self.emails.push(Email::new(&contents, &input_p)?);
 
         // add entry to the batch
-        self.batch.add_entry(Entry::from_str(&e)?)?;
+        self.batch.add_entry(Entry::from_str(&contents)?)?;
 
         Ok(())
     }
@@ -63,6 +68,7 @@ impl Context {
             config,
             brain: Brain::new(),
         };
+
         ctx.read_fs()?;
         Ok(ctx)
     }
@@ -108,7 +114,10 @@ impl Context {
             } else {
                 // TODO check if its actually an email?
                 // what do we do with non-expected files?
-                emails.push(Email::new(p_str)?);
+                // FIXME this is where the tests are crashing and I dont know why
+                println!("Pushing email: {}", p_str);
+                let contents = file_contents_from_str_path(p_str)?;
+                emails.push(Email::new(&contents, p_str).chain_err(|| "Could not add email")?);
             }
         }
 
@@ -160,8 +169,9 @@ impl Context {
         Ok(())
     }
     // Have Brain::add_entry insert it properly, then persist it to disk
-    pub fn add_entry(&mut self, e: String) -> Result<()> {
-        self.brain.add_entry(e)?;
+    pub fn add_entry(&mut self, input_p: &str) -> Result<()> {
+        println!("Context::add_entry: {}", input_p);
+        self.brain.add_entry(&input_p)?;
         self.write_fs()?;
         Ok(())
     }
@@ -170,6 +180,7 @@ impl Context {
     #[cfg(test)]
     pub fn clean(&mut self) {
         self.brain = Brain::new();
+        self.write_fs().unwrap();
     }
 }
 
@@ -180,9 +191,9 @@ pub struct Email {
 }
 
 impl Email {
-    pub fn new(path: &str) -> Result<Self> {
+    pub fn new(path: &str, filename: &str) -> Result<Self> {
         Ok(Email {
-            filename: path.into(),
+            filename: filename.into(),
             contents: file_contents_from_str_path(path)?,
         })
     }
@@ -206,27 +217,63 @@ impl FromStr for Email {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::{thread_rng, Rng};
     #[test]
     fn test_add_entry_brain() {
-        let mut test_context: Context = Context::initialize(Config::test()).unwrap();
-        test_context.brain.add_entry(TEST_COOL_STR.into()).unwrap();
-        assert_eq!(test_context.brain, Brain::test())
+        // Start with fresh test dir
+        println!("Preparing temp dir...");
+        let test_dir = format!{"{}", thread_rng().gen::<u32>()};
+        ::std::fs::remove_dir_all(&test_dir)
+            .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
+        ::std::fs::create_dir(&test_dir).unwrap();
+
+        let mut test_context: Context = Context::initialize(Config::test(&test_dir)).unwrap();
+
+        // add our sample email AFTER init
+        let sample_p = &format!("{}/sample-email.html", test_dir);
+        let mut file = ::std::fs::File::create(sample_p).unwrap();
+        file.write_all(TEST_COOL_STR.as_bytes()).unwrap();
+
+        test_context.brain.add_entry(sample_p).unwrap();
+        let test_brain = test_context.brain;
+
+        println!("Cleaning temp dir...");
+        ::std::fs::remove_dir_all(test_dir)
+            .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
+
+        assert_eq!(test_brain, Brain::test())
     }
 
     #[test]
-    // this is actually more like read_fs()
     fn test_read_fs() {
         // Start with fresh test dir
-        ::std::fs::remove_dir_all("test/")
+        println!("Preparing temp dir...");
+        let test_dir = format!("{}", thread_rng().gen::<u32>());
+        ::std::fs::remove_dir_all(&test_dir)
             .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
+        ::std::fs::create_dir(&test_dir).unwrap();
+
+        // save the test email to the temp dir
+        let sample_p = &format!("{}/sample-email.html", test_dir);
+        let mut file = ::std::fs::File::create(sample_p).unwrap();
+        file.write_all(TEST_COOL_STR.as_bytes()).unwrap();
 
         // add the entry to the running test batch
-        let mut test_context: Context = Context::initialize(Config::test()).unwrap();
-        test_context.add_entry(TEST_COOL_STR.into()).unwrap();
+        // it will read the entry during initialization
+        let mut test_context: Context = Context::initialize(Config::test(&test_dir)).unwrap();
+        //test_context.add_entry(sample_p).unwrap();
 
         // Clear memory, and re-read from fs
-        test_context.clean();
-        test_context.read_fs().unwrap();
-        assert_eq!(test_context.brain, Brain::test())
+        //test_context.clean();
+        //test_context.read_fs().unwrap();
+
+        // grab result before cleanup
+        let test_brain = test_context.brain;
+        println!("Cleaning test dir...");
+        ::std::fs::remove_dir_all(test_dir)
+            .unwrap_or_else(|e| eprintln!("Failed to remove test dir: {}", e));
+
+        // cleanup test dir before assert
+        assert_eq!(test_brain, Brain::test())
     }
 }

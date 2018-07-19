@@ -1,6 +1,5 @@
 // config.rs handles loading and eventually writing to the app configuration
 use errors::*;
-use rand::{thread_rng, Rng};
 use std::fmt;
 use toml;
 use util::file_contents_from_str_path;
@@ -32,13 +31,13 @@ impl Config {
 
 impl Config {
     #[cfg(test)]
-    pub fn test() -> Self {
-        let temp_path = format!("{}", thread_rng().gen::<u32>());
+    // Takes a dirname to be used as the path
+    pub fn test(s: &str) -> Self {
         Config {
             config_path: Some("Test.toml".into()),
             directory: Directory {
                 compressed: false,
-                path: temp_path,
+                path: s.into(),
             },
         }
     }

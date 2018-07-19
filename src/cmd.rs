@@ -3,14 +3,12 @@ use brain::Context;
 use clap::{App, Arg};
 use config::init_config;
 use errors::*;
-use util::file_contents_from_str_path;
 
 static VERSION: &'static str = "0.1.0";
 
 // Takes the given file path relative to crate root and adds its contents to the batch
 fn add(input_p: &str, ctx: &mut Context) -> Result<()> {
-    let input = file_contents_from_str_path(input_p)?;
-    ctx.add_entry(input)?;
+    ctx.add_entry(&input_p)?;
     Ok(())
 }
 
