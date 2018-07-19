@@ -2,6 +2,7 @@
 use brain::Context;
 use clap::{App, Arg};
 use config::init_config;
+use email::email;
 use errors::*;
 
 static VERSION: &'static str = "0.1.0";
@@ -51,6 +52,13 @@ pub fn run() -> Result<()> {
                 .help("Specify an alternate toml config file"),
         )
         .arg(
+            Arg::with_name("email")
+                .short("e")
+                .long("email")
+                .takes_value(false)
+                .help("Placeholder command for developing email functionality"),
+        )
+        .arg(
             Arg::with_name("preview")
                 .short("p")
                 .long("preview")
@@ -91,6 +99,10 @@ pub fn run() -> Result<()> {
             matches.value_of("add").expect("Could not read INPUT_FILE"),
             &mut ctx,
         ).chain_err(|| "Could not add input");
+    }
+
+    if matches.is_present("email") {
+        email()?;
     }
 
     if matches.is_present("report") {

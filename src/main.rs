@@ -6,6 +6,8 @@ extern crate clap;
 extern crate error_chain;
 #[macro_use]
 extern crate lazy_static;
+extern crate lettre;
+extern crate lettre_email;
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
@@ -21,6 +23,7 @@ mod batch;
 mod brain;
 mod cmd;
 mod config;
+mod email;
 mod errors {
     error_chain!{}
 }
