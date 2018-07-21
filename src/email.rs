@@ -1,8 +1,9 @@
 // email.rs handles the input and output for the app
 
+use email_format::rfc5322::Parsable;
 use email_format::Email;
 use errors::*;
-use std::{fmt, str::FromStr};
+use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub struct RawEmail {
@@ -25,7 +26,9 @@ impl fmt::Display for RawEmail {
     }
 }
 
-impl FromStr for RawEmail {
+// This is only used for testing
+#[cfg(test)]
+impl ::std::str::FromStr for RawEmail {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {

@@ -218,24 +218,6 @@ impl fmt::Display for Batch {
     }
 }
 
-impl FromStr for Batch {
-    type Err = Error;
-
-    // TODO this is not correct
-    // you'll likely want a direct BatchEntry::from_str()
-    fn from_str(s: &str) -> Result<Self> {
-        // each line is an entry
-        let lines = s.split('\n');
-        let mut entries = Vec::new();
-        for line in lines {
-            entries.push(BatchEntry::from(Entry::from_email(&RawEmail::from_str(
-                line,
-            )?)?));
-        }
-        Ok(Batch { entries })
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

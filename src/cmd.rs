@@ -22,6 +22,8 @@ fn preview(ctx: &mut Context) -> Result<()> {
 // For now, this doesn't need to be automatic.
 // For MVP demo, just have an outlook folder that you can see.
 // When it gets to a certain number, run the program
+// save a zipped folder of the emails `emails.zip`
+// save the digest to `DATETIME.digest.html`
 fn report(_ctx: &Context) -> Result<()> {
     // TODO
     println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.\n");
