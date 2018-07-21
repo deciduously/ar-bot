@@ -1,4 +1,5 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
+use batch::Batch;
 use brain::Context;
 use clap::{App, Arg};
 use config::init_config;
@@ -7,20 +8,11 @@ use errors::*;
 
 static VERSION: &'static str = "0.1.0";
 
-// Takes the given file path relative to crate root and adds its contents to the batch
-// FIXME this should ONLY copy into the folder
-// Maybe add another command to copy a whoel folder of emails.
-// Or just to straight up batch that folder, without storing them at all first.
-fn add(input_p: &str, ctx: &mut Context) -> Result<()> {
-    ctx.add_entry(&input_p)?;
-    Ok(())
-}
-
 // Outputs the batch to the console
 // This just reads the emails in the folder and displays what the digest would look like
 // if we ran that command now, but makes no changes.
 fn preview(ctx: &mut Context) -> Result<()> {
-    println!("{}\n", ctx.brain.batch);
+    println!("{}\n", Batch::from_brain(&ctx.brain)?);
     Ok(())
 }
 
@@ -44,14 +36,6 @@ pub fn run() -> Result<()> {
         .version(VERSION)
         .author("deciduously <bendlovy@gmail.com>") // TODO read this from Cargo.toml?!
         .about("Batching of auto email alerts")
-        .arg(
-            Arg::with_name("add")
-                .short("a")
-                .long("add")
-                .value_name("INPUT_FILE")
-                .help("Add a new file to the register")
-                .takes_value(true),
-        )
         // This one will be a subcommand with subcommands
         .arg(
             Arg::with_name("config")
@@ -103,13 +87,6 @@ pub fn run() -> Result<()> {
     // Call relative functions if their respective flags are present.
     // TODO smart preview with add - how SHOULD it be?
     // For now, I'm calling preview last so that we always dislay the end result of the batch
-
-    if matches.is_present("add") {
-        let _ = add(
-            matches.value_of("add").expect("Could not read INPUT_FILE"),
-            &mut ctx,
-        ).chain_err(|| "Could not add input");
-    }
 
     //if matches.is_present("email") {
     //    email()?;

@@ -1,4 +1,5 @@
 // batch.rs handles the string parsing and batching logic for eliminating redundant line items
+use brain::{Brain, Email};
 use chrono::prelude::*;
 use errors::*;
 use regex::Regex;
@@ -70,23 +71,17 @@ impl Entry {
     }
 }
 
-impl fmt::Display for Entry {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ID: {}, PRODUCT {}", self.id, self.product)
-    }
-}
-
-impl FromStr for Entry {
-    type Err = Error;
-
+impl Entry {
     // TODO this will eventually be getting a whole email
     // including headers, time, etc
     // instead of Utc::now(), store whatever time the email was received
     // For now, this is close enough
-    fn from_str(s: &str) -> Result<Self> {
+    fn from_email(e: &Email) -> Result<Self> {
         lazy_static! {
             static ref AD_RE: Regex = Regex::new(r"^The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>.+) Has Changed You need to verify the Autodraft is now correct").unwrap();
         }
+
+        let s = &e.contents;
 
         if AD_RE.is_match(s) {
             let captures = AD_RE.captures(s).unwrap();
@@ -103,6 +98,11 @@ impl FromStr for Entry {
     }
 }
 
+impl fmt::Display for Entry {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "ID: {}, PRODUCT {}", self.id, self.product)
+    }
+}
 // Can store multiple entries
 #[derive(Clone, Debug, PartialEq)]
 pub struct BatchEntry {
@@ -181,12 +181,21 @@ impl Batch {
         Ok(())
     }
 
+    pub fn from_brain(brain: &Brain) -> Result<Self> {
+        // call add_entry on each email in the brain
+        let mut ret = Batch::new();
+        for email in &brain.emails {
+            ret.add_entry(Entry::from_email(email)?)?;
+        }
+        Ok(ret)
+    }
+
     #[cfg(test)]
     // Test batch with one entry inserted
     pub fn test() -> Self {
         let mut batch = Batch::new();
         batch
-            .add_entry(Entry::from_str(TEST_COOL_STR).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         batch
     }
@@ -218,7 +227,9 @@ impl FromStr for Batch {
         let lines = s.split('\n');
         let mut entries = Vec::new();
         for line in lines {
-            entries.push(BatchEntry::from(Entry::from_str(line)?));
+            entries.push(BatchEntry::from(Entry::from_email(&Email::from_str(
+                line,
+            )?)?));
         }
         Ok(Batch { entries })
     }
@@ -231,7 +242,7 @@ mod tests {
     #[test]
     fn test_entry_from_str() {
         assert_eq!(
-            Entry::from_str(TEST_COOL_STR).unwrap(),
+            Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap(),
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),

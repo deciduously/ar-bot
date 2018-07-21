@@ -13,7 +13,6 @@ with this exact need but not using either of those two operating systems.
 
 FLAGS:
 
-* `-e, --email`      Placeholder command for developing email functionality
 * `-h, --help`       Prints help information
 * `-p, --preview`    Displays the current contents of the batch
 * `-r, --report`     Daily report comparing inputs to outputs for the day
@@ -21,7 +20,6 @@ FLAGS:
 
 OPTIONS:
 
-* `-a, --add <INPUT_FILE>`        Add a new file to the register
 * `-c, --config <CONFIG_FILE>`    Specify an alternate toml config file
 
 Feel free to mix and match any of the above, it's fun.
@@ -38,7 +36,6 @@ With no config given it will default to `Bot.toml`, and with no flags or options
 * [clap](https://github.com/kbknapp/clap-rs)
 * [error-chain](https://github.com/rust-lang-nursery/error-chain)
 * [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs)
-* [lettre](https://github.com/lettre/lettre)
 * [regex](https://github.com/rust-lang/regex)
 * [serde/serde_derive](https://serde.rs)
 * [toml](https://github.com/alexcrichton/toml-rs)

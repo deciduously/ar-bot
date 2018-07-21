@@ -1,6 +1,6 @@
 // config.rs handles loading and eventually writing to the app configuration
 use errors::*;
-use std::fmt;
+use std::{fmt, path::PathBuf};
 use toml;
 use util::file_contents_from_str_path;
 
@@ -18,7 +18,7 @@ pub struct Config {
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct Directory {
     pub compressed: bool,
-    pub path: String,
+    pub path: PathBuf,
 }
 
 impl Config {
@@ -27,20 +27,6 @@ impl Config {
         Ok(())
     }
     // TODO add more self mutations here, use Clap subcommands to provide easy access
-}
-
-impl Config {
-    #[cfg(test)]
-    // Takes a dirname to be used as the path
-    pub fn test(s: &str) -> Self {
-        Config {
-            config_path: Some("Test.toml".into()),
-            directory: Directory {
-                compressed: false,
-                path: s.into(),
-            },
-        }
-    }
 }
 
 impl Default for Config {
@@ -77,7 +63,7 @@ impl fmt::Display for Directory {
         compressed_string.push_str("using");
         write!(
             f,
-            "Brain path: {} - {} compression",
+            "Brain path: {:?} - {} compression",
             self.path, compressed_string
         )
     }
