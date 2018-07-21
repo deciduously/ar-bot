@@ -79,10 +79,13 @@ impl Entry {
     // For now, this is close enough
     fn from_email(e: &RawEmail) -> Result<Self> {
         lazy_static! {
-            static ref AD_RE: Regex = Regex::new(r"^The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>.+) Has Changed You need to verify the Autodraft is now correct").unwrap();
+            static ref AD_RE: Regex = Regex::new(r"^The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>.+) Has Changed\r\nYou need to verify the Autodraft is now correct").unwrap();
         }
 
-        let s = &e.contents;
+        let s = &format!(
+            "{}",
+            e.contents.get_body().chain_err(|| "No email body found")?
+        );
 
         if AD_RE.is_match(s) {
             let captures = AD_RE.captures(s).unwrap();
@@ -94,6 +97,7 @@ impl Entry {
                 time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
             })
         } else {
+            println!("{}", s);
             bail!("Couldn't match Regex")
         }
     }

@@ -10,7 +10,7 @@ use util::*;
 
 // This is my internal folder
 // I want to be able to serialize/deserialize the contents
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Brain {
     pub emails: Vec<RawEmail>,
 }

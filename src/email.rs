@@ -5,17 +5,20 @@ use email_format::Email;
 use errors::*;
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct RawEmail {
     pub filename: String,
-    pub contents: String,
+    pub contents: Email,
 }
 
 impl RawEmail {
     pub fn new(filename: &str, contents: &str) -> Result<Self> {
+        let (email, remainder) =
+            Email::parse(contents.as_bytes()).chain_err(|| "Could not parse email")?;
+        assert_eq!(remainder.len(), 0);
         Ok(RawEmail {
             filename: filename.into(),
-            contents: contents.into(),
+            contents: email,
         })
     }
 }
@@ -32,9 +35,12 @@ impl ::std::str::FromStr for RawEmail {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
+        let mut email = Email::new("iMIS@jccgb.org", "Sat, 21 Jul 2018 16:39:04 -0400")
+            .chain_err(|| "Could not set email headers")?;
+        email.set_body(s).chain_err(|| "Could not set email body")?;
         Ok(RawEmail {
             filename: format!("TEMPDATE.html"),
-            contents: s.into(),
+            contents: email,
         })
     }
 }
