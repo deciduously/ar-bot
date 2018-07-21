@@ -2,24 +2,34 @@
 use brain::Context;
 use clap::{App, Arg};
 use config::init_config;
-use email::email;
+//use email::email;
 use errors::*;
 
 static VERSION: &'static str = "0.1.0";
 
 // Takes the given file path relative to crate root and adds its contents to the batch
+// FIXME this should ONLY copy into the folder
+// Maybe add another command to copy a whoel folder of emails.
+// Or just to straight up batch that folder, without storing them at all first.
 fn add(input_p: &str, ctx: &mut Context) -> Result<()> {
     ctx.add_entry(&input_p)?;
     Ok(())
 }
 
 // Outputs the batch to the console
+// This just reads the emails in the folder and displays what the digest would look like
+// if we ran that command now, but makes no changes.
 fn preview(ctx: &mut Context) -> Result<()> {
     println!("{}\n", ctx.brain.batch);
     Ok(())
 }
 
 // Unimplemented!  This is a placeholder
+// TODO this will actually write out the digest, and copy everything written
+// It should ideally ask user to confirm
+// For now, this doesn't need to be automatic.
+// For MVP demo, just have an outlook folder that you can see.
+// When it gets to a certain number, run the program
 fn report(_ctx: &Context) -> Result<()> {
     // TODO
     println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.\n");
@@ -51,13 +61,13 @@ pub fn run() -> Result<()> {
                 .takes_value(true)
                 .help("Specify an alternate toml config file"),
         )
-        .arg(
-            Arg::with_name("email")
-                .short("e")
-                .long("email")
-                .takes_value(false)
-                .help("Placeholder command for developing email functionality"),
-        )
+        //.arg(
+        //    Arg::with_name("email")
+        //        .short("e")
+        //        .long("email")
+        //        .takes_value(false)
+        //        .help("Placeholder command for developing email functionality"),
+        //)
         .arg(
             Arg::with_name("preview")
                 .short("p")
@@ -101,9 +111,9 @@ pub fn run() -> Result<()> {
         ).chain_err(|| "Could not add input");
     }
 
-    if matches.is_present("email") {
-        email()?;
-    }
+    //if matches.is_present("email") {
+    //    email()?;
+    //}
 
     if matches.is_present("report") {
         report(&ctx)?;

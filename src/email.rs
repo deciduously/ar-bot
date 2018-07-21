@@ -1,4 +1,6 @@
 // email.rs handles the input and output for the app
+// BEN disconnnect this for now and do it last.
+
 use errors::*;
 use lettre::{EmailTransport, SmtpTransport};
 use lettre_email::EmailBuilder;
