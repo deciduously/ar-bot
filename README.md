@@ -2,11 +2,9 @@
 
 [![Build Status](https://travis-ci.org/deciduously/ar-bot.svg?branch=master)](https://travis-ci.org/deciduously/ar-bot)
 
-Command-line tool for collection and batching of auto-generated emails, in an attempt to save paper.  It will read all the downloaded RFC5322 formatted email alerts in the folder specified  
-and batch similar alerts together.  When enough have been batched, the use can cut a dugest, which copies everything into the `hx/` folder.
+Command-line tool for collection and batching of auto-generated emails, in an attempt to save paper.  It will read all the downloaded RFC5322 formatted email alerts in the folder specified and batch similar alerts together.  When enough have been batched, the user can cut a dugest, which copies everything into the `hx/` folder.
 
-Ive tested on Linux and Windows. It Probably works ok on MacOS, too, if you happen to be an alternate unverse me
-with this exact need but not using either of those two operating systems.
+Ive tested on Linux and Windows. It probably works ok on MacOS, too, if you happen to be an alternate unverse me with this exact need but aren't using either of those two operating systems.
 
 ## Usage
 
