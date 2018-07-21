@@ -28,12 +28,13 @@ With no config given it will default to `Bot.toml`, and with no flags or options
 
 ## Dependencies
 
-* Stable rust
+* Stable [rust](https://www.rust-lang.org)
 
 ## Crates
 
 * [chrono](https://github.com/chronotope/chrono)
 * [clap](https://github.com/kbknapp/clap-rs)
+* [email-format](https://github.com/mikedilger/email-format)
 * [error-chain](https://github.com/rust-lang-nursery/error-chain)
 * [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs)
 * [regex](https://github.com/rust-lang/regex)
