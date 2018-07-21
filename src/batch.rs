@@ -1,6 +1,7 @@
 // batch.rs handles the string parsing and batching logic for eliminating redundant line items
-use brain::{Brain, Email};
+use brain::Brain;
 use chrono::prelude::*;
+use email::RawEmail;
 use errors::*;
 use regex::Regex;
 use std::{fmt, str::FromStr};
@@ -76,7 +77,7 @@ impl Entry {
     // including headers, time, etc
     // instead of Utc::now(), store whatever time the email was received
     // For now, this is close enough
-    fn from_email(e: &Email) -> Result<Self> {
+    fn from_email(e: &RawEmail) -> Result<Self> {
         lazy_static! {
             static ref AD_RE: Regex = Regex::new(r"^The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>.+) Has Changed You need to verify the Autodraft is now correct").unwrap();
         }
@@ -195,7 +196,7 @@ impl Batch {
     pub fn test() -> Self {
         let mut batch = Batch::new();
         batch
-            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         batch
     }
@@ -227,7 +228,7 @@ impl FromStr for Batch {
         let lines = s.split('\n');
         let mut entries = Vec::new();
         for line in lines {
-            entries.push(BatchEntry::from(Entry::from_email(&Email::from_str(
+            entries.push(BatchEntry::from(Entry::from_email(&RawEmail::from_str(
                 line,
             )?)?));
         }
@@ -242,7 +243,7 @@ mod tests {
     #[test]
     fn test_entry_from_str() {
         assert_eq!(
-            Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap(),
+            Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap(),
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),

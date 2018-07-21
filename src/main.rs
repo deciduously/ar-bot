@@ -3,6 +3,7 @@
 
 extern crate chrono;
 extern crate clap;
+extern crate email_format;
 #[macro_use]
 extern crate error_chain;
 #[macro_use]
@@ -24,7 +25,7 @@ mod batch;
 mod brain;
 mod cmd;
 mod config;
-// mod email;
+mod email;
 mod errors {
     error_chain!{}
 }

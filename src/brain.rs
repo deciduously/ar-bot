@@ -1,9 +1,10 @@
 // brain.rs handles all internal storage directory access
 use config::Config;
+use email::RawEmail;
 use errors::*;
 use regex::Regex;
 use std::{
-    fmt, fs::{create_dir, read_dir}, path::PathBuf, str::FromStr,
+    fmt, fs::{create_dir, read_dir}, path::PathBuf,
 };
 use util::*;
 
@@ -11,7 +12,7 @@ use util::*;
 // I want to be able to serialize/deserialize the contents
 #[derive(Debug, PartialEq)]
 pub struct Brain {
-    pub emails: Vec<Email>,
+    pub emails: Vec<RawEmail>,
 }
 
 // I want to change how it works
@@ -26,7 +27,11 @@ impl Brain {
 
 impl fmt::Display for Brain {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "emails: {:?}", self.emails)
+        let mut emails = String::new();
+        for email in &self.emails {
+            emails.push_str(&format!("\r\n{}\r\n", email));
+        }
+        write!(f, "emails: {}", emails)
     }
 }
 
@@ -79,7 +84,6 @@ impl Context {
             .chain_err(|| "Could not read brain!")?
             .map(|f| f.expect("Could not read brain entry").path())
             .collect();
-        println!("{:#?}", dir_listing);
 
         // Grab the current batch
         // Save any emails
@@ -92,15 +96,15 @@ impl Context {
                 // TODO check if its actually an email?
                 // what do we do with non-expected files?
                 // FIXME this is where the tests are crashing and I dont know why
-                println!("Pushing email: {}", p_str);
+                println!("Reading email: {}", p_str);
                 let contents = file_contents_from_str_path(p_str)?;
-                emails.push(Email::new(&contents, p_str).chain_err(|| "Could not add email")?);
+                emails.push(RawEmail::new(p_str, &contents).chain_err(|| "Could not add email")?);
             }
         }
 
         // Put together the brain and store it back in the context
         self.brain = Brain { emails };
-        println!("Brain:\n{}\n", self.brain);
+        println!("Brain:\r\n{}\r\n", self.brain);
 
         Ok(())
     }
@@ -141,32 +145,6 @@ impl Context {
     //
     //        Ok(())
     //    }
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Email {
-    pub filename: String,
-    pub contents: String,
-}
-
-impl Email {
-    pub fn new(filename: &str, contents: &str) -> Result<Self> {
-        Ok(Email {
-            filename: filename.into(),
-            contents: contents.into(),
-        })
-    }
-}
-
-impl FromStr for Email {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        Ok(Email {
-            filename: format!("TEMPDATE.html"),
-            contents: s.into(),
-        })
-    }
 }
 
 // TODO add arguments to only modify/read in parts of the whole thing

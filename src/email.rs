@@ -1,31 +1,37 @@
 // email.rs handles the input and output for the app
-// BEN disconnnect this for now and do it last.
 
+use email_format::Email;
 use errors::*;
-use lettre::{EmailTransport, SmtpTransport};
-use lettre_email::EmailBuilder;
-use std::path::Path;
+use std::{fmt, str::FromStr};
 
-pub fn email() -> Result<()> {
-    let email = EmailBuilder::new()
-        // can either use tuple or just addr
-        .to(("blovy@jccgb.org", "Ben Lovy"))
-        .from("ar-bot@dinosaur.com")
-        .subject("Rust made me")
-        .text("And it feels sooo good")
-        .build().chain_err(|| "Failed to build hardcoded email")?;
+#[derive(Debug, PartialEq)]
+pub struct RawEmail {
+    pub filename: String,
+    pub contents: String,
+}
 
-    // open local connection on port 25
-    let mut mailer = SmtpTransport::builder_unencrypted_localhost()
-        .chain_err(|| "Failed to build SmtpTransport")?
-        .build();
-    let result = mailer.send(&email);
-    if result.is_ok() {
-        println!("Sent email");
-    } else {
-        println!("Could not send email: {:?}", result);
+impl RawEmail {
+    pub fn new(filename: &str, contents: &str) -> Result<Self> {
+        Ok(RawEmail {
+            filename: filename.into(),
+            contents: contents.into(),
+        })
     }
+}
 
-    assert!(result.is_ok());
-    Ok(())
+impl fmt::Display for RawEmail {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.contents)
+    }
+}
+
+impl FromStr for RawEmail {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Ok(RawEmail {
+            filename: format!("TEMPDATE.html"),
+            contents: s.into(),
+        })
+    }
 }
