@@ -100,12 +100,14 @@ pub fn run() -> Result<()> {
             Arg::with_name("verbose")
                 .short("v")
                 .multiple(true)
-                .help("Set RUST_LOG verbosity.  There are three levels: info, debug, and trace.  Repeat the flag to set level: -v -v -v or -vvv")
+                .help("Set RUST_LOG verbosity.  There are three levels: info, debug, and trace.  Repeat the flag to set level: -v -v -v or -vvv, keeping in mind that 2 and 3 are usually the same unless something goes wrong")
         )
         // Arg cleanup
         // Arg search_hx - maybe use ripgrep!
         // Arg send
         .get_matches();
+
+    init_logging(matches.occurrences_of("verbose"))?;
 
     println!("AR-Bot v.{}\npass '-h' or '--help' for usage\n", VERSION);
 
@@ -114,8 +116,6 @@ pub fn run() -> Result<()> {
         .chain_err(|| "Could not load configuration file")
         .chain_err(|| "Could not make heads or tails of that abomination of a config file")?;
     info!("{}\n", config);
-
-    init_logging(matches.occurrences_of("verbose"))?;
 
     // Grab a Context with a Brain
     // this takes ownership of Config - all further access is via this ctx

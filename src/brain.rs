@@ -15,9 +15,6 @@ pub struct Brain {
     pub emails: Vec<RawEmail>,
 }
 
-// I want to change how it works
-// Instead of holding on to a batch, a batch is ONLY a function of the emails inside.
-// So, this wont hold on to a running copy of it.
 impl Brain {
     pub fn new() -> Self {
         Brain { emails: Vec::new() }
@@ -51,7 +48,8 @@ impl Context {
         };
 
         ctx.read_fs()?;
-        info!("Intiailized: {}", ctx.config);
+        info!("Intiailized Config.");
+        debug!("{}", ctx.config);
         Ok(ctx)
     }
 
@@ -112,6 +110,7 @@ impl Context {
 
         // Put together the brain and store it back in the context
         self.brain = Brain { emails };
+        debug!("Brain: {}", self.brain);
 
         Ok(())
     }

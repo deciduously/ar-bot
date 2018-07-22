@@ -206,7 +206,7 @@ impl Entry {
         );
 
         if AD_RE.is_match(s) {
-            info!("MATCH: {}", s);
+            debug!("MATCH: {}", s);
             let captures = AD_RE.captures(s).unwrap();
             Ok(Entry {
                 id: (&captures["id"])
