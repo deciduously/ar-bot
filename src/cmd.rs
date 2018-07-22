@@ -6,7 +6,10 @@ use config::init_config;
 //use email::email;
 use errors::*;
 use page::*;
-use std::{env::set_var, fs::create_dir};
+use pretty_env_logger;
+use std::{
+    env::{remove_var, set_var, var}, fs::create_dir,
+};
 
 static VERSION: &'static str = "0.1.0";
 
@@ -96,9 +99,8 @@ pub fn run() -> Result<()> {
         .arg(
             Arg::with_name("verbose")
                 .short("v")
-                .long("verbose")
-                .takes_value(true)
-                .help("Set RUST_LOG verbosity.  Possible options: all | trace | debug | info | warn | error | none.  Defaults to none.")
+                .multiple(true)
+                .help("Set RUST_LOG verbosity.  There are three levels: error, info, and trace.  Repeat the flag to set level: -v -v -v or -vvv")
         )
         // Arg cleanup
         // Arg search_hx - maybe use ripgrep!
@@ -113,10 +115,7 @@ pub fn run() -> Result<()> {
         .chain_err(|| "Could not make heads or tails of that abomination of a config file")?;
     info!("{}\n", config);
 
-    // set the verbosity level
-    let verbosity = matches.value_of("verbose");
-    set_var("RUST_LOG", verbosity.unwrap_or(""));
-    info!("Verbosity: {}", verbosity.unwrap());
+    init_logging(matches.occurrences_of("verbose"))?;
 
     // Grab a Context with a Brain
     // this takes ownership of Config - all further access is via this ctx
@@ -144,6 +143,30 @@ pub fn run() -> Result<()> {
     }
 
     println!("Goodbye!");
+    remove_var("RUST_APP_LOG");
 
+    Ok(())
+}
+
+fn init_logging(level: u64) -> Result<()> {
+    if level == 0 {
+        // dont even set the variable
+        return Ok(());
+    };
+    let verbosity = match level {
+        1 => "error",
+        2 => "info",
+        3 | _ => "trace",
+    };
+    set_var("RUST_LOG", verbosity);
+    println!(
+        "Attempting to set logger to {}",
+        var("RUST_LOG").chain_err(|| "Failed to set verbosity level")?
+    );
+    pretty_env_logger::init();
+    info!(
+        "Set verbosity to {}",
+        var("RUST_LOG").chain_err(|| "Failed to set verbosity level")?
+    );
     Ok(())
 }
