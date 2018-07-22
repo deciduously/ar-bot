@@ -40,19 +40,18 @@ impl fmt::Display for Brain {
 pub struct Context {
     pub config: Config,
     pub brain: Brain,
-    pub verbosity: u8,
 }
 
 impl Context {
     // Take ownership over the fresh ones passed in
-    pub fn initialize(config: Config, verbosity: u8) -> Result<Self> {
+    pub fn initialize(config: Config) -> Result<Self> {
         let mut ctx = Context {
             config,
             brain: Brain::new(),
-            verbosity,
         };
 
         ctx.read_fs()?;
+        info!("Intiailized: {:#?}", ctx);
         Ok(ctx)
     }
 
@@ -75,7 +74,7 @@ impl Context {
         // If no path exists, create it.
         // std::fs::create_dir will return an error if the path exists
         if !brain_path.exists() {
-            println!("No brain found!  Creating...");
+            warn!("No brain found!  Creating...");
             create_dir(brain_path).chain_err(|| "Could not create brain dir")?;
         }
 
@@ -105,7 +104,7 @@ impl Context {
                 // TODO check if its actually an email?
                 // what do we do with non-expected files?
                 // FIXME this is where the tests are crashing and I dont know why
-                println!("READ: {}", p_str);
+                info!("READ: {}", p_str);
                 let contents = file_contents_from_str_path(p_str)?;
                 emails.push(RawEmail::new(p_str, &contents).chain_err(|| "Could not add email")?);
             }

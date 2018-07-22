@@ -13,6 +13,7 @@ pub struct RawEmail {
 
 impl RawEmail {
     pub fn new(filename: &str, contents: &str) -> Result<Self> {
+        info!("PARSE: {}", contents);
         let (email, remainder) =
             Email::parse(contents.as_bytes()).chain_err(|| "Could not parse email")?;
         assert_eq!(remainder.len(), 0);

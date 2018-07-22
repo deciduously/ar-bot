@@ -31,13 +31,14 @@ impl Batch {
 
         // First, search for the id.  Only if we find it, search for a duplicate product on that id.
 
-        print!("INSERT: {} <", e);
+        let mut info_str = String::new();
+        info_str.push_str(&format!("INSERT: {} <", e));
 
         match entry_class {
             EntryClass::Duplicate((id, product)) => {
                 // the only thing I push is the time, and I haven't done those yet
                 // Multiple duplicate times are OK, I still wnat a note that I processed the email
-                print!("This is a duplicate... just noting the new alert time");
+                info_str.push_str("This is a duplicate... just noting the new alert time");
 
                 for (uid, batch_entry) in self.entries.iter_mut() {
                     if id == *uid {
@@ -50,7 +51,7 @@ impl Batch {
                 }
             }
             EntryClass::New => {
-                print!("It's a brand new entry for this digest.");
+                info_str.push_str("It's a brand new entry for this digest.");
                 self.entries.entry(e.id).or_insert(BatchEntry::from(e));
             }
             EntryClass::NewProduct(id) => {
@@ -58,7 +59,7 @@ impl Batch {
                 // TODO Swap our clone back in place
                 // For now, Im just pushing and pruning later
 
-                print!("Same person, new product");
+                info_str.push_str("Same person, new product");
 
                 for (uid, batch_entry) in self.entries.iter_mut() {
                     if id == *uid {
@@ -70,12 +71,14 @@ impl Batch {
                 }
             }
         }
-        println!(">");
+        info_str.push_str(">");
+        info!("{}", info_str);
         Ok(())
     }
 
     // Classifies an entry
     fn classify(&self, e: &Entry) -> EntryClass {
+        debug!("Classifying: {}", e);
         let mut entry_class = EntryClass::default();
         for (id, be) in &self.entries {
             if *id == e.id {
@@ -199,7 +202,7 @@ impl Entry {
                 time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
             })
         } else {
-            println!("{}", s);
+            debug!("{}", s);
             bail!("Couldn't match Regex")
         }
     }

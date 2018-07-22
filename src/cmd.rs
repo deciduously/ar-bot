@@ -6,7 +6,7 @@ use config::init_config;
 //use email::email;
 use errors::*;
 use page::*;
-use std::fs::create_dir;
+use std::{env::set_var, fs::create_dir};
 
 static VERSION: &'static str = "0.1.0";
 
@@ -17,7 +17,7 @@ fn digest(ctx: &Context) -> Result<()> {
     let hx_path = ctx.hx_path();
 
     if !hx_path.exists() {
-        println!("No history found!  Creating...");
+        warn!("No history found!  Creating...");
         create_dir(hx_path).chain_err(|| "Could not create history dir")?;
     }
 
@@ -97,8 +97,8 @@ pub fn run() -> Result<()> {
             Arg::with_name("verbose")
                 .short("v")
                 .long("verbose")
-                .multiple(true)
-                .help("Set the output verbosity.  Include multiple times to set level: -vv or -v -v.  Use as many as you like, but there are only two levels.")
+                .takes_value(true)
+                .help("Set RUST_LOG verbosity.  Possible options: all | trace | debug | info | warn | error | none.  Defaults to none.")
         )
         // Arg cleanup
         // Arg search_hx - maybe use ripgrep!
@@ -111,21 +111,17 @@ pub fn run() -> Result<()> {
     let config = init_config(matches.value_of("config"))
         .chain_err(|| "Could not load configuration file")
         .chain_err(|| "Could not make heads or tails of that abomination of a config file")?;
-    println!("{}\n", config);
+    info!("{}\n", config);
 
     // set the verbosity level
-    let verbosity = match matches.occurrences_of("v") {
-        0 => 0,
-        1 => 1,
-        2 => 2,
-        _ => 2,
-    };
+    let verbosity = matches.value_of("verbose");
+    set_var("RUST_LOG", verbosity.unwrap_or(""));
+    info!("Verbosity: {}", verbosity.unwrap());
 
     // Grab a Context with a Brain
     // this takes ownership of Config - all further access is via this ctx
     // Because Rust is great, everything will clean itslef up nicely when ctx goes out of scope
-    let mut ctx =
-        Context::initialize(config, verbosity).chain_err(|| "Could not initialze config")?;
+    let mut ctx = Context::initialize(config).chain_err(|| "Could not initialze config")?;
 
     // Call relative functions if their respective flags are present.
     // TODO smart preview with add - how SHOULD it be?

@@ -16,7 +16,7 @@ FLAGS:
 * `-h, --help`       Prints help information
 * `-p, --preview`    Displays the current contents of the batch
 * `-r, --report`     Daily report comparing inputs to outputs for the day
-* `-v, --verbose`    Set the CLI verbosity.  Include multiple times to set level: -vv or -v -v.  Use as many as you like, but there are only two levels.
+* `-v, --verbose`    Set RUST_LOG verbosity.  Possible options: all | trace | debug | info | warn | error | none.  Defaults to none.
 * `-V, --version`    Prints version information
 
 OPTIONS:
@@ -39,10 +39,12 @@ With no config given it will default to `Bot.toml`, and with no flags or options
 * [email-format](https://github.com/mikedilger/email-format)
 * [error-chain](https://github.com/rust-lang-nursery/error-chain)
 * [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs)
+* [log](https://githb.com/rust-lang-nursery/log)
+* [pretty_assertions](https://github.com/colin-kiegel/rust-pretty-assertions)
+* [pretty_env_logger](https://github.com/seanmonstar/pretty_env_logger/)
 * [regex](https://github.com/rust-lang/regex)
 * [serde/serde_derive](https://serde.rs)
 * [toml](https://github.com/alexcrichton/toml-rs)
-* [pretty_assertions](https://github.com/colin-kiegel/rust-pretty-assertions)
 * [rand](https://github.com/rust-lang-nursery/rand)
 
 ## Notes

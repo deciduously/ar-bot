@@ -10,11 +10,14 @@ extern crate email_format;
 extern crate error_chain;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate log;
 // extern crate lettre;
 // extern crate lettre_email;
 #[cfg(test)]
 #[macro_use]
 extern crate pretty_assertions;
+extern crate pretty_env_logger;
 #[cfg(test)]
 extern crate rand;
 extern crate regex;
@@ -37,16 +40,17 @@ mod util;
 use cmd::run;
 
 fn main() {
+    pretty_env_logger::init();
     // Immediately call into a properly error-chained fn
     if let Err(ref e) = run() {
-        eprintln!("error: {}", e);
+        error!("error: {}", e);
 
         for e in e.iter().skip(1) {
-            eprintln!("caused by: {}", e);
+            debug!("caused by: {}", e);
         }
 
         if let Some(backtrace) = e.backtrace() {
-            eprintln!("backtrace: {:?}", backtrace);
+            trace!("backtrace: {:?}", backtrace);
         }
 
         ::std::process::exit(1);
