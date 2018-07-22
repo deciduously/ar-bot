@@ -3,6 +3,7 @@ use brain::Brain;
 use chrono::prelude::*;
 use email::RawEmail;
 use errors::*;
+use log::Level;
 use regex::Regex;
 use std::{collections::HashMap, fmt, str::FromStr};
 #[cfg(test)]
@@ -32,13 +33,13 @@ impl Batch {
         // First, search for the id.  Only if we find it, search for a duplicate product on that id.
 
         let mut info_str = String::new();
-        info_str.push_str(&format!("INSERT: {} <", e));
+        if log_enabled!(Level::Info) { info_str.push_str(&format!("INSERT: {} <", e)); }
 
         match entry_class {
             EntryClass::Duplicate((id, product)) => {
                 // the only thing I push is the time, and I haven't done those yet
                 // Multiple duplicate times are OK, I still wnat a note that I processed the email
-                info_str.push_str("This is a duplicate... just noting the new alert time");
+                if log_enabled!(Level::Info) { info_str.push_str("This is a duplicate... just noting the new alert time"); }
 
                 for (uid, batch_entry) in self.entries.iter_mut() {
                     if id == *uid {
@@ -51,7 +52,7 @@ impl Batch {
                 }
             }
             EntryClass::New => {
-                info_str.push_str("It's a brand new entry for this digest.");
+                if log_enabled!(Level::Info) { info_str.push_str("It's a brand new entry for this digest."); }
                 self.entries.entry(e.id).or_insert(BatchEntry::from(e));
             }
             EntryClass::NewProduct(id) => {
@@ -59,7 +60,7 @@ impl Batch {
                 // TODO Swap our clone back in place
                 // For now, Im just pushing and pruning later
 
-                info_str.push_str("Same person, new product");
+                if log_enabled!(Level::Info) { info_str.push_str("Same person, new product"); }
 
                 for (uid, batch_entry) in self.entries.iter_mut() {
                     if id == *uid {
@@ -71,14 +72,16 @@ impl Batch {
                 }
             }
         }
-        info_str.push_str(">");
-        info!("{}", info_str);
+        if log_enabled!(Level::Info) {
+            info_str.push_str(">");
+            info!("{}", info_str);
+        }
         Ok(())
     }
 
     // Classifies an entry
     fn classify(&self, e: &Entry) -> EntryClass {
-        debug!("Classifying: {}", e);
+
         let mut entry_class = EntryClass::default();
         for (id, be) in &self.entries {
             if *id == e.id {
@@ -92,6 +95,7 @@ impl Batch {
                 break;
             }
         }
+        debug!("CLASSIFY: {} - {:?}", e, entry_class);
         entry_class
     }
 
@@ -158,6 +162,7 @@ impl fmt::Display for BatchEntry {
             for t in times {
                 time_str.push_str(&t);
             }
+            // TODO squash times.
             alerts.push_str(&format!("{} at {}", k, time_str));
         }
         writeln!(f, "{}: {}", self.id, alerts)
@@ -193,6 +198,7 @@ impl Entry {
         );
 
         if AD_RE.is_match(s) {
+            info!("MATCH: {}", s);
             let captures = AD_RE.captures(s).unwrap();
             Ok(Entry {
                 id: (&captures["id"])

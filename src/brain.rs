@@ -51,7 +51,7 @@ impl Context {
         };
 
         ctx.read_fs()?;
-        info!("Intiailized: {:#?}", ctx);
+        info!("Intiailized: {}", ctx.config);
         Ok(ctx)
     }
 

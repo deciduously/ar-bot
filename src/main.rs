@@ -40,7 +40,6 @@ mod util;
 use cmd::run;
 
 fn main() {
-    pretty_env_logger::init();
     // Immediately call into a properly error-chained fn
     if let Err(ref e) = run() {
         error!("error: {}", e);
