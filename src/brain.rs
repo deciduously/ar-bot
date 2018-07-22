@@ -40,14 +40,16 @@ impl fmt::Display for Brain {
 pub struct Context {
     pub config: Config,
     pub brain: Brain,
+    pub verbosity: u8,
 }
 
 impl Context {
     // Take ownership over the fresh ones passed in
-    pub fn initialize(config: Config) -> Result<Self> {
+    pub fn initialize(config: Config, verbosity: u8) -> Result<Self> {
         let mut ctx = Context {
             config,
             brain: Brain::new(),
+            verbosity,
         };
 
         ctx.read_fs()?;
@@ -103,7 +105,7 @@ impl Context {
                 // TODO check if its actually an email?
                 // what do we do with non-expected files?
                 // FIXME this is where the tests are crashing and I dont know why
-                println!("Reading email: {}", p_str);
+                println!("READ: {}", p_str);
                 let contents = file_contents_from_str_path(p_str)?;
                 emails.push(RawEmail::new(p_str, &contents).chain_err(|| "Could not add email")?);
             }
@@ -111,7 +113,6 @@ impl Context {
 
         // Put together the brain and store it back in the context
         self.brain = Brain { emails };
-        println!("Brain:\r\n{}\r\n", self.brain);
 
         Ok(())
     }

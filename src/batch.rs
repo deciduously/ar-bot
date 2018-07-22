@@ -16,7 +16,7 @@ type Alerts = HashMap<Product, Vec<DateTime<Utc>>>;
 // Maybe a HashMap?
 #[derive(Debug, PartialEq)]
 pub struct Batch {
-    entries: Entries,
+    pub entries: Entries,
 }
 
 impl Batch {
@@ -31,13 +31,13 @@ impl Batch {
 
         // First, search for the id.  Only if we find it, search for a duplicate product on that id.
 
-        println!("Inserting {}", e);
+        print!("INSERT: {} <", e);
 
         match entry_class {
             EntryClass::Duplicate((id, product)) => {
                 // the only thing I push is the time, and I haven't done those yet
                 // Multiple duplicate times are OK, I still wnat a note that I processed the email
-                println!("This is a duplicate... just noting the new alert time");
+                print!("This is a duplicate... just noting the new alert time");
 
                 for (uid, batch_entry) in self.entries.iter_mut() {
                     if id == *uid {
@@ -50,7 +50,7 @@ impl Batch {
                 }
             }
             EntryClass::New => {
-                println!("It's a brand new entry for this digest.");
+                print!("It's a brand new entry for this digest.");
                 self.entries.entry(e.id).or_insert(BatchEntry::from(e));
             }
             EntryClass::NewProduct(id) => {
@@ -58,7 +58,7 @@ impl Batch {
                 // TODO Swap our clone back in place
                 // For now, Im just pushing and pruning later
 
-                println!("Same person, new product");
+                print!("Same person, new product");
 
                 for (uid, batch_entry) in self.entries.iter_mut() {
                     if id == *uid {
@@ -70,8 +70,7 @@ impl Batch {
                 }
             }
         }
-
-        println!();
+        println!(">");
         Ok(())
     }
 
@@ -79,7 +78,6 @@ impl Batch {
     fn classify(&self, e: &Entry) -> EntryClass {
         let mut entry_class = EntryClass::default();
         for (id, be) in &self.entries {
-            println!("Classifying {}", e);
             if *id == e.id {
                 entry_class = EntryClass::NewProduct(*id);
                 for (p, _) in &be.alerts {

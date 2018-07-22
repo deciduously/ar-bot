@@ -16,6 +16,7 @@ FLAGS:
 * `-h, --help`       Prints help information
 * `-p, --preview`    Displays the current contents of the batch
 * `-r, --report`     Daily report comparing inputs to outputs for the day
+* `-v, --verbose`    Set the CLI verbosity.  Include multiple times to set level: -vv or -v -v.  Use as many as you like, but there are only two levels.
 * `-V, --version`    Prints version information
 
 OPTIONS:
