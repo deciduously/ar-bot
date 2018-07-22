@@ -143,7 +143,7 @@ pub fn run() -> Result<()> {
     }
 
     println!("Goodbye!");
-    remove_var("RUST_APP_LOG");
+    remove_var("RUST_LOG");
 
     Ok(())
 }
