@@ -33,17 +33,21 @@ impl Batch {
         // First, search for the id.  Only if we find it, search for a duplicate product on that id.
 
         let mut info_str = String::new();
-        if log_enabled!(Level::Info) { info_str.push_str(&format!("INSERT: {} <", e)); }
+        if log_enabled!(Level::Info) {
+            info_str.push_str(&format!("INSERT: {} <", e));
+        }
 
         match entry_class {
             EntryClass::Duplicate((id, product)) => {
                 // the only thing I push is the time, and I haven't done those yet
                 // Multiple duplicate times are OK, I still wnat a note that I processed the email
-                if log_enabled!(Level::Info) { info_str.push_str("This is a duplicate... just noting the new alert time"); }
+                if log_enabled!(Level::Info) {
+                    info_str.push_str("This is a duplicate... just noting the new alert time");
+                }
 
-                for (uid, batch_entry) in self.entries.iter_mut() {
+                for (uid, batch_entry) in &mut self.entries {
                     if id == *uid {
-                        for (key, times) in batch_entry.alerts.iter_mut() {
+                        for (key, times) in &mut batch_entry.alerts {
                             if *key == product {
                                 times.push(e.time);
                             }
@@ -52,22 +56,26 @@ impl Batch {
                 }
             }
             EntryClass::New => {
-                if log_enabled!(Level::Info) { info_str.push_str("It's a brand new entry for this digest."); }
-                self.entries.entry(e.id).or_insert(BatchEntry::from(e));
+                if log_enabled!(Level::Info) {
+                    info_str.push_str("It's a brand new entry for this digest.");
+                }
+                self.entries
+                    .entry(e.id)
+                    .or_insert_with(|| BatchEntry::from(e));
             }
             EntryClass::NewProduct(id) => {
                 // add the product to the proper BatchEntry
                 // TODO Swap our clone back in place
                 // For now, Im just pushing and pruning later
 
-                if log_enabled!(Level::Info) { info_str.push_str("Same person, new product"); }
+                if log_enabled!(Level::Info) {
+                    info_str.push_str("Same person, new product");
+                }
 
-                for (uid, batch_entry) in self.entries.iter_mut() {
+                for (uid, batch_entry) in &mut self.entries {
                     if id == *uid {
-                        batch_entry
-                            .alerts
-                            .entry(e.product.clone())
-                            .or_insert(vec![e.time]);
+                        let times = vec![e.time];
+                        batch_entry.alerts.entry(e.product.clone()).or_insert(times);
                     }
                 }
             }
@@ -81,12 +89,11 @@ impl Batch {
 
     // Classifies an entry
     fn classify(&self, e: &Entry) -> EntryClass {
-
         let mut entry_class = EntryClass::default();
         for (id, be) in &self.entries {
             if *id == e.id {
                 entry_class = EntryClass::NewProduct(*id);
-                for (p, _) in &be.alerts {
+                for p in be.alerts.keys() {
                     if e.product == *p {
                         entry_class = EntryClass::Duplicate((*id, e.product.clone()));
                         break;
@@ -172,7 +179,8 @@ impl fmt::Display for BatchEntry {
 impl From<Entry> for BatchEntry {
     fn from(e: Entry) -> Self {
         let mut alerts = Alerts::new();
-        alerts.entry(e.product).or_insert(vec![e.time]);
+        let times = vec![e.time];
+        alerts.entry(e.product).or_insert(times);
         BatchEntry { id: e.id, alerts }
     }
 }

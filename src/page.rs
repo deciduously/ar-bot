@@ -25,7 +25,7 @@ pub fn write_digest(ctx: &Context) -> Result<()> {
     let mut digest_file = File::create(digest_path).chain_err(|| "Could not create digest file")?;
     let mut entries = Vec::new();
 
-    for (_, entry) in &batch.entries {
+    for entry in batch.entries.values() {
         entries.push(format!("{}", entry));
     }
     let digest = DigestTemplate { entries };
