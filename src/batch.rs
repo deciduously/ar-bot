@@ -6,7 +6,7 @@ use errors::*;
 use regex::Regex;
 use std::{collections::HashMap, fmt, str::FromStr};
 #[cfg(test)]
-use util::TEST_COOL_STR;
+use util::*;
 
 // One instance of an email happening.
 // Should it store the ID?  I'm only ever using this inside of a BatchEntry, with the id in the parent struct
@@ -58,8 +58,8 @@ impl Batch {
         // First, search for the id.  Only if we find it, search for a duplicate product on that id.
 
         for (id, be) in &self.entries {
-            println!("Classifying {}", be);
-            if be.id == e.id {
+            println!("Classifying {}", e);
+            if *id == e.id {
                 entry_class = EntryClass::NewProduct;
                 for a in &be.alerts {
                     if e.product == a.product {
@@ -117,7 +117,6 @@ impl Batch {
     }
 
     #[cfg(test)]
-    // Test batch with one entry inserted
     pub fn test() -> Self {
         let mut batch = Batch::new();
         batch
@@ -126,14 +125,15 @@ impl Batch {
         batch
     }
     #[cfg(test)]
-    pub fn test_duplicate_id() -> Self {
-        Batch {
-            entries: vec![BatchEntry {
-                id: e.id,
-                products: vec![e.product],
-                times: vec![e.time],
-            }],
-        }
+    pub fn test_second_email_str(s: &str) -> Self {
+        let e = Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap();
+        let e_second = Entry::from_email(&RawEmail::from_str(s).unwrap()).unwrap();
+        let mut entries = Entries::new();
+        entries.entry(e.id).or_insert(BatchEntry::from(e));
+        entries
+            .entry(e_second.id)
+            .or_insert(BatchEntry::from(e_second));
+        Batch { entries }
     }
 }
 
@@ -214,14 +214,6 @@ impl Entry {
             bail!("Couldn't match Regex")
         }
     }
-    #[cfg(test)]
-    pub fn test() -> Self {
-        Entry {
-            id: 12345,
-            product: Product::from_str("COOL_PROD").unwrap(),
-            time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
-        }
-    }
 }
 
 impl fmt::Display for Entry {
@@ -297,6 +289,7 @@ type UserID = u32;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use email::RawEmail;
 
     #[test]
     fn test_entry_from_str() {
@@ -313,24 +306,62 @@ mod tests {
     fn test_add_entry_to_empty_batch() {
         // Should create a new BatchEntry
         let mut batch = Batch::new();
-        batch.add_entry(Entry::test()).unwrap();
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .unwrap();
         let test_batch = Batch::test();
+        assert_eq!(batch, test_batch)
+    }
+    #[test]
+    fn test_add_entry_new_id() {
+        // Should create a second BatchEntry
+        let mut batch = Batch::new();
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .unwrap();
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_DIF_BOTH).unwrap()).unwrap())
+            .unwrap();
+        let test_batch = Batch::test_second_email_str(TEST_DIF_BOTH);
         assert_eq!(batch, test_batch)
     }
     #[test]
     fn test_add_entry_duplicate_id() {
         // Should add product to existing BatchEntry
         let mut batch = Batch::new();
-        assert_eq!("Write", "Me")
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .unwrap();
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_DIF_PROD).unwrap()).unwrap())
+            .unwrap();
+        let test_batch = Batch::test_second_email_str(TEST_DIF_PROD);
+        assert_eq!(batch, test_batch)
     }
     #[test]
     fn test_add_entry_duplicate_product() {
         // Make a BatchEntry for a the new ID, it doesnt matter if two products are the same
-
+        let mut batch = Batch::new();
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .unwrap();
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_DIF_ID).unwrap()).unwrap())
+            .unwrap();
+        let test_batch = Batch::test_second_email_str(TEST_DIF_ID);
+        assert_eq!(batch, test_batch)
     }
     #[test]
     fn test_add_entry_duplicate_id_and_product() {
         // Should just add the time
-        assert_eq!("Write", "Me")
+        let mut batch = Batch::new();
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .unwrap();
+        batch
+            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .unwrap();
+        let test_batch = Batch::test_second_email_str(TEST_COOL_STR);
+        assert_eq!(batch, test_batch)
     }
 }
