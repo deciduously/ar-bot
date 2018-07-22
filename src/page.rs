@@ -1,6 +1,6 @@
 // page.rs handles the askama templates
 use askama::Template;
-use batch::Batch;
+use batch::{Batch, BatchEntry};
 use brain::Context;
 use errors::*;
 use std::{fs::File, io::prelude::*};
@@ -8,7 +8,7 @@ use std::{fs::File, io::prelude::*};
 #[derive(Template)]
 #[template(path = "digest.html")]
 struct DigestTemplate {
-    entries: Vec<String>,
+    entries: Vec<BatchEntry>,
 }
 
 #[derive(Template)]
@@ -16,6 +16,10 @@ struct DigestTemplate {
 struct ReportTemplate<'a> {
     date: &'a str,
 }
+
+#[derive(Template)]
+#[template(path = "skel.html")]
+struct SkelTemplate {}
 
 // write_digest writes the digest to hx/
 pub fn write_digest(ctx: &Context) -> Result<()> {
@@ -26,7 +30,7 @@ pub fn write_digest(ctx: &Context) -> Result<()> {
     let mut entries = Vec::new();
 
     for entry in batch.entries.values() {
-        entries.push(format!("{}", entry));
+        entries.push(entry.clone());
     }
     let digest = DigestTemplate { entries };
     digest_file

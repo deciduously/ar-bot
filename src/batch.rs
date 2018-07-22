@@ -160,6 +160,18 @@ pub struct BatchEntry {
     pub alerts: Alerts,
 }
 
+impl BatchEntry {
+    // Just returns the alerts as a vector of (Product, Vec<DateTime<Utc>>)
+    // is this necessary?
+    pub fn alerts_vec(&self) -> Vec<(Product, Vec<DateTime<Utc>>)> {
+        let mut ret = Vec::new();
+        for (k, v) in &self.alerts {
+            ret.push((k.clone(), v.clone()));
+        }
+        ret
+    }
+}
+
 impl fmt::Display for BatchEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut alerts = String::new();

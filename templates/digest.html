@@ -1,6 +1,39 @@
-<h1>Digest</h1>
-<ul>
-{% for entry in entries %}
-    <li>{{ entry|e }}</li>
-{% endfor %}
-</ul>
+{% extends "skel.html" %}
+
+{% block title %}Digest{% endblock %}
+
+{% block head %}
+    <style>
+        .emphasis {font-weight: bold}
+        .product-name {font-weight: lighter}
+        .time {font-style: italic}
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1>Digest</h1>
+    <ul>
+    {% for entry in entries %}
+        <li>
+            iMIS ID:<span class="emphasis">{{ entry.id|e }}</span>  Individual's Name: ______________________________</br>
+            {% if entry.alerts_vec().len() == 1 %}
+                Product to check:<br/>
+            {% else %}
+                Products to check:<br/>
+            {% endif %}
+            {% for alert in entry.alerts_vec() %}
+                <span class="product-name">{{ alert.0|e }}</span> (alert at
+                {% if alert.1.len() == 1 %}
+                    <span class="time">{{ alert.1[0]|e }}</span>
+                {% else %}
+                    {% for time in alert.1 %}
+                        <span class="time">{{ time|e }}</span>
+                    {% endfor %}
+                {% endif %}
+                )<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+            {% endfor %}
+        </li>
+        <br/>
+    {% endfor %}
+    </ul>
+{% endblock %}
