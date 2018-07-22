@@ -52,15 +52,14 @@ impl Batch {
     }
 
     pub fn add_entry(&mut self, e: Entry) -> Result<()> {
-        let mut entry_class = EntryClass::default();
-        let mut existing_id = None;
+        let entry_class = self.classify(&e);
 
         // First, search for the id.  Only if we find it, search for a duplicate product on that id.
 
         println!("Inserting {}", e);
 
         match entry_class {
-            EntryClass::Duplicate((id, product)) => {
+            EntryClass::Duplicate((_id, _product)) => {
                 // the only thing I push is the time, and I haven't done those yet
                 // Multiple duplicate times are OK, I still wnat a note that I processed the email
                 println!("This is a duplicate... just noting the new alert time");
@@ -69,7 +68,7 @@ impl Batch {
             EntryClass::New => {
                 println!("It's a brand new entry for this digest.");
                 self.entries
-                    .entry(existing_id.unwrap())
+                    .entry(e.id)
                     .or_insert(BatchEntry::from(e));
             }
             EntryClass::NewProduct(id) => {
