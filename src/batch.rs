@@ -57,27 +57,10 @@ impl Batch {
 
         // First, search for the id.  Only if we find it, search for a duplicate product on that id.
 
-        for (id, be) in &self.entries {
-            println!("Classifying {}", e);
-            if *id == e.id {
-                entry_class = EntryClass::NewProduct;
-                for a in &be.alerts {
-                    if e.product == a.product {
-                        entry_class = EntryClass::Duplicate;
-                        break;
-                    }
-                }
-                existing_id = Some(*id);
-                break;
-            } else {
-                entry_class = EntryClass::New;
-            }
-        }
-
         println!("Inserting {}", e);
 
         match entry_class {
-            EntryClass::Duplicate => {
+            EntryClass::Duplicate((id, product)) => {
                 // the only thing I push is the time, and I haven't done those yet
                 // Multiple duplicate times are OK, I still wnat a note that I processed the email
                 println!("This is a duplicate... just noting the new alert time");
@@ -89,22 +72,38 @@ impl Batch {
                     .entry(existing_id.unwrap())
                     .or_insert(BatchEntry::from(e));
             }
-            EntryClass::NewProduct => {
+            EntryClass::NewProduct(id) => {
                 // add the product to the proper BatchEntry
                 // TODO Swap our clone back in place
                 // For now, Im just pushing and pruning later
 
                 println!("Same person, new product");
-                let be = self.entries
-                    .entry(existing_id.unwrap())
-                    .or_insert(BatchEntry::default());
+                let be = self.entries.entry(id).or_insert(BatchEntry::default());
                 be.alerts.push(Alert::new(e.product, e.time));
             }
-            EntryClass::Unclassified => bail!("You shouldn't be hitting an Unclassified entry!"),
         }
 
         println!();
         Ok(())
+    }
+
+    // Classifies an entry
+    fn classify(&self, e: &Entry) -> EntryClass {
+        let mut entry_class = EntryClass::default();
+        for (id, be) in &self.entries {
+            println!("Classifying {}", e);
+            if *id == e.id {
+                entry_class = EntryClass::NewProduct(*id);
+                for a in &be.alerts {
+                    if e.product == a.product {
+                        entry_class = EntryClass::Duplicate((*id, e.product.clone()));
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        entry_class
     }
 
     pub fn from_brain(brain: &Brain) -> Result<Self> {
@@ -226,17 +225,16 @@ impl fmt::Display for Entry {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum EntryClass {
-    Duplicate,
+    Duplicate((UserID, Product)),
     New,
-    NewProduct,
-    Unclassified,
+    NewProduct(UserID),
 }
 
 impl Default for EntryClass {
     fn default() -> Self {
-        EntryClass::Unclassified
+        EntryClass::New
     }
 }
 
@@ -363,5 +361,35 @@ mod tests {
             .unwrap();
         let test_batch = Batch::test_second_email_str(TEST_COOL_STR);
         assert_eq!(batch, test_batch)
+    }
+    #[test]
+    fn test_classify_new_entry() {
+        let test_batch = Batch::test();
+        let test_entry = Entry::from_email(&RawEmail::from_str(TEST_DIF_BOTH).unwrap()).unwrap();
+        assert_eq!(test_batch.classify(&test_entry), EntryClass::New)
+    }
+    #[test]
+    fn test_classify_duplicate_id_and_product() {
+        let test_batch = Batch::test();
+        let test_entry = Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap();
+        assert_eq!(
+            test_batch.classify(&test_entry),
+            EntryClass::Duplicate((12345, Product::from_str("COOL_PROD").unwrap()))
+        )
+    }
+    #[test]
+    fn test_classify_duplicate_id() {
+        let test_batch = Batch::test();
+        let test_entry = Entry::from_email(&RawEmail::from_str(TEST_DIF_PROD).unwrap()).unwrap();
+        assert_eq!(
+            test_batch.classify(&test_entry),
+            EntryClass::NewProduct(12345)
+        )
+    }
+    #[test]
+    fn test_classify_duplicate_prod() {
+        let test_batch = Batch::test();
+        let test_entry = Entry::from_email(&RawEmail::from_str(TEST_DIF_ID).unwrap()).unwrap();
+        assert_eq!(test_batch.classify(&test_entry), EntryClass::New)
     }
 }
