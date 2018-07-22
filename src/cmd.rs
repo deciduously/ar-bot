@@ -24,6 +24,7 @@ fn preview(ctx: &mut Context) -> Result<()> {
 // When it gets to a certain number, run the program
 // save a zipped folder of the emails `emails.zip`
 // save the digest to `DATETIME.digest.html`
+// REPORT AND DIGEST NEED TO BE DIFFERENT COMMANDS
 fn report(_ctx: &Context) -> Result<()> {
     // TODO
     println!("AR-Bot Daily Report for <DATE>\nGenerated at <TIME>\n\nNothing to report.\n");
