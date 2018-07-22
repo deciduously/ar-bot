@@ -8,32 +8,7 @@ use std::{collections::HashMap, fmt, str::FromStr};
 #[cfg(test)]
 use util::*;
 
-// One instance of an email happening.
-// Should it store the ID?  I'm only ever using this inside of a BatchEntry, with the id in the parent struct
-#[derive(Clone, Debug, PartialEq)]
-pub struct Alert {
-    pub product: Product,
-    pub times: Vec<DateTime<Utc>>,
-}
-
-impl Alert {
-    fn new(product: Product, time: DateTime<Utc>) -> Self {
-        Alert {
-            product,
-            times: vec![time],
-        }
-    }
-
-    fn add_time(&mut self, t: DateTime<Utc>) {
-        self.times.push(t);
-    }
-}
-
-impl fmt::Display for Alert {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "_{} at {:?}_", self.product, self.times)
-    }
-}
+type Alerts = HashMap<Product, Vec<DateTime<Utc>>>;
 
 // The final batch
 // there should only be one BatchEntry per ID - that's literally the whole point of this app
@@ -59,11 +34,22 @@ impl Batch {
         println!("Inserting {}", e);
 
         match entry_class {
-            EntryClass::Duplicate((_id, _product)) => {
+            EntryClass::Duplicate((id, product)) => {
                 // the only thing I push is the time, and I haven't done those yet
                 // Multiple duplicate times are OK, I still wnat a note that I processed the email
                 println!("This is a duplicate... just noting the new alert time");
-                unimplemented!()
+                //let mut be = self.entries.get(&id).unwrap(); // You should ever be inserting the default - and the next line should catch it
+                //let mut prod = be.alerts.get(&product).unwrap();
+                //prod.push(e.time);
+                for (uid, batch_entry) in self.entries.iter_mut() {
+                    if id == *uid {
+                        for (key, times) in batch_entry.alerts.iter_mut() {
+                            if *key == product {
+                                times.push(e.time);
+                            }
+                        }
+                    }
+                }
             }
             EntryClass::New => {
                 println!("It's a brand new entry for this digest.");
@@ -77,8 +63,13 @@ impl Batch {
                 // For now, Im just pushing and pruning later
 
                 println!("Same person, new product");
-                let be = self.entries.entry(id).or_insert(BatchEntry::default());
-                be.alerts.push(Alert::new(e.product, e.time));
+                //let mut be = self.entries.get(&id).unwrap();
+                //be.alerts.entry(e.product).or_insert(vec![e.time]);
+                for (uid, batch_entry) in self.entries.iter_mut() {
+                    if id == *uid {
+                        batch_entry.alerts.entry(e.product.clone()).or_insert(vec![e.time]);
+                    }
+                }
             }
         }
 
@@ -93,8 +84,8 @@ impl Batch {
             println!("Classifying {}", e);
             if *id == e.id {
                 entry_class = EntryClass::NewProduct(*id);
-                for a in &be.alerts {
-                    if e.product == a.product {
+                for (p, _) in &be.alerts {
+                    if e.product == *p {
                         entry_class = EntryClass::Duplicate((*id, e.product.clone()));
                         break;
                     }
@@ -156,14 +147,14 @@ impl fmt::Display for Batch {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct BatchEntry {
     pub id: u32,
-    pub alerts: Vec<Alert>,
+    pub alerts: Alerts,
 }
 
 impl fmt::Display for BatchEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut alerts = String::new();
-        for a in &self.alerts {
-            alerts.push_str(&format!("{}", a));
+        for (k, _) in &self.alerts {
+            alerts.push_str(&format!("{}", k));
         }
         writeln!(f, "{}: {}", self.id, alerts)
     }
@@ -171,9 +162,11 @@ impl fmt::Display for BatchEntry {
 
 impl From<Entry> for BatchEntry {
     fn from(e: Entry) -> Self {
+        let mut alerts = Alerts::new();
+        alerts.entry(e.product).or_insert(vec![e.time]);
         BatchEntry {
             id: e.id,
-            alerts: vec![Alert::new(e.product, e.time)],
+            alerts,
         }
     }
 }
@@ -205,7 +198,7 @@ impl Entry {
                     .parse::<u32>()
                     .chain_err(|| "Could not read iMIS id")?,
                 product: Product::from_str(&captures["product"])?,
-                time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11), // Get this from the Email
+                time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
             })
         } else {
             println!("{}", s);
@@ -237,7 +230,7 @@ impl Default for EntryClass {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Product {
     CgBilling,
     CgTrans,
