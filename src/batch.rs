@@ -340,7 +340,23 @@ mod tests {
         batch
             .add_entry(Entry::from_email(&RawEmail::from_str(TEST_DIF_PROD).unwrap()).unwrap())
             .unwrap();
-        let test_batch = Batch::test_second_email_str(TEST_DIF_PROD);
+        let mut test_alerts = HashMap::new();
+        test_alerts
+            .entry(Product::Other("COOL_PROOD".into()))
+            .or_insert(vec![Utc.ymd(2000, 1, 1).and_hms(9, 10, 11)]);
+        test_alerts
+            .entry(Product::Other("COOL_PROD".into()))
+            .or_insert(vec![Utc.ymd(2000, 1, 1).and_hms(9, 10, 11)]);
+        let test_batch_entry = BatchEntry {
+            id: 12345,
+            alerts: test_alerts,
+        };
+        let mut test_entries = HashMap::new();
+        test_entries.entry(12345).or_insert(test_batch_entry);
+        let test_batch = Batch {
+            entries: test_entries,
+        };
+
         assert_eq!(batch, test_batch)
     }
     #[test]
@@ -353,7 +369,7 @@ mod tests {
         batch
             .add_entry(Entry::from_email(&RawEmail::from_str(TEST_DIF_ID).unwrap()).unwrap())
             .unwrap();
-        let test_batch = Batch::test_second_email_str(TEST_DIF_ID);
+        let test_batch = Batch::test_second_email_str(TEST_DIF_ID); // Bath::test_second_email_str isn't smart like that
         assert_eq!(batch, test_batch)
     }
     #[test]
@@ -366,7 +382,25 @@ mod tests {
         batch
             .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
-        let test_batch = Batch::test_second_email_str(TEST_COOL_STR);
+        //let test_batch = Batch::test_second_email_str(TEST_COOL_STR);
+        let mut test_alerts = HashMap::new();
+        let test_times = vec![
+            Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
+            Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
+        ];
+        test_alerts
+            .entry(Product::Other("COOL_PROD".into()))
+            .or_insert(test_times);
+        let test_batch_entry = BatchEntry {
+            id: 12345,
+            alerts: test_alerts,
+        };
+        let mut test_entries = HashMap::new();
+        test_entries.entry(12345).or_insert(test_batch_entry);
+        let test_batch = Batch {
+            entries: test_entries,
+        };
+
         assert_eq!(batch, test_batch)
     }
     #[test]
