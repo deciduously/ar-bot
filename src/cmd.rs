@@ -5,8 +5,25 @@ use clap::{App, Arg};
 use config::init_config;
 //use email::email;
 use errors::*;
+use page::*;
+use std::fs::create_dir;
 
 static VERSION: &'static str = "0.1.0";
+
+// Does two things:
+// 1. Creates DATETIME.digest.html under hx/
+// 2. Moves every email used in the batch into DATETIME/ and compresses it.
+fn digest(ctx: &Context) -> Result<()> {
+    let hx_path = ctx.hx_path();
+
+    if !hx_path.exists() {
+        println!("No history found!  Creating...");
+        create_dir(hx_path).chain_err(|| "Could not create history dir")?;
+    }
+
+    write_digest(ctx);
+    Ok(())
+}
 
 // Outputs the batch to the console
 // This just reads the emails in the folder and displays what the digest would look like
@@ -47,6 +64,13 @@ pub fn run() -> Result<()> {
                 .value_name("CONFIG_FILE")
                 .takes_value(true)
                 .help("Specify an alternate toml config file"),
+        )
+        .arg(
+            Arg::with_name("digest")
+                .short("d")
+                .long("digest")
+                .takes_value(false)
+                .help("Finalizes a digest with the emails in the brain. Make sure to preview first!")
         )
         //.arg(
         //    Arg::with_name("email")
@@ -94,6 +118,10 @@ pub fn run() -> Result<()> {
     //if matches.is_present("email") {
     //    email()?;
     //}
+
+    if matches.is_present("digest") {
+        digest(&ctx)?;
+    }
 
     if matches.is_present("report") {
         report(&ctx)?;

@@ -53,6 +53,13 @@ impl Context {
         ctx.read_fs()?;
         Ok(ctx)
     }
+
+    pub fn hx_path(&self) -> PathBuf {
+        let mut ret = self.config.directory.path.clone();
+        ret.push("hx");
+        ret
+    }
+
     // Reads the brain dir into memory from the dir specified in config.  If no brain exists, makes a new one
     // this is still prpbably all relevant
     // TODO proper Path usage.  Lets start here.

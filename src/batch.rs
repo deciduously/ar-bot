@@ -38,9 +38,7 @@ impl Batch {
                 // the only thing I push is the time, and I haven't done those yet
                 // Multiple duplicate times are OK, I still wnat a note that I processed the email
                 println!("This is a duplicate... just noting the new alert time");
-                //let mut be = self.entries.get(&id).unwrap(); // You should ever be inserting the default - and the next line should catch it
-                //let mut prod = be.alerts.get(&product).unwrap();
-                //prod.push(e.time);
+
                 for (uid, batch_entry) in self.entries.iter_mut() {
                     if id == *uid {
                         for (key, times) in batch_entry.alerts.iter_mut() {
@@ -53,9 +51,7 @@ impl Batch {
             }
             EntryClass::New => {
                 println!("It's a brand new entry for this digest.");
-                self.entries
-                    .entry(e.id)
-                    .or_insert(BatchEntry::from(e));
+                self.entries.entry(e.id).or_insert(BatchEntry::from(e));
             }
             EntryClass::NewProduct(id) => {
                 // add the product to the proper BatchEntry
@@ -63,11 +59,13 @@ impl Batch {
                 // For now, Im just pushing and pruning later
 
                 println!("Same person, new product");
-                //let mut be = self.entries.get(&id).unwrap();
-                //be.alerts.entry(e.product).or_insert(vec![e.time]);
+
                 for (uid, batch_entry) in self.entries.iter_mut() {
                     if id == *uid {
-                        batch_entry.alerts.entry(e.product.clone()).or_insert(vec![e.time]);
+                        batch_entry
+                            .alerts
+                            .entry(e.product.clone())
+                            .or_insert(vec![e.time]);
                     }
                 }
             }
@@ -153,8 +151,13 @@ pub struct BatchEntry {
 impl fmt::Display for BatchEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut alerts = String::new();
-        for (k, _) in &self.alerts {
-            alerts.push_str(&format!("{}", k));
+        for (k, ts) in &self.alerts {
+            let times: Vec<String> = ts.iter().map(|t| format!("{}, ", t)).collect();
+            let mut time_str = String::new();
+            for t in times {
+                time_str.push_str(&t);
+            }
+            alerts.push_str(&format!("{} at {}", k, time_str));
         }
         writeln!(f, "{}: {}", self.id, alerts)
     }
@@ -164,10 +167,7 @@ impl From<Entry> for BatchEntry {
     fn from(e: Entry) -> Self {
         let mut alerts = Alerts::new();
         alerts.entry(e.product).or_insert(vec![e.time]);
-        BatchEntry {
-            id: e.id,
-            alerts,
-        }
+        BatchEntry { id: e.id, alerts }
     }
 }
 

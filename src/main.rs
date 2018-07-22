@@ -1,6 +1,8 @@
 // main.rs is the entry point of the executable
 #![recursion_limit = "1024"]
 
+#[macro_use]
+extern crate askama;
 extern crate chrono;
 extern crate clap;
 extern crate email_format;
@@ -29,6 +31,7 @@ mod email;
 mod errors {
     error_chain!{}
 }
+mod page;
 mod util;
 
 use cmd::run;

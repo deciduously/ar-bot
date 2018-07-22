@@ -12,6 +12,7 @@ I've tested on Linux and Windows. It probably works ok on MacOS, too, if you hap
 
 FLAGS:
 
+* `-d, --digest`     Finalizes a digest with the emails in the brain. Make sure to preview first!
 * `-h, --help`       Prints help information
 * `-p, --preview`    Displays the current contents of the batch
 * `-r, --report`     Daily report comparing inputs to outputs for the day
@@ -23,7 +24,7 @@ OPTIONS:
 
 Feel free to mix and match any of the above, it's fun.
 
-With no config given it will default to `Bot.toml`, and with no flags or options passed it will print its configuration and quit.
+With no config given it will default to `Bot.toml`, and with no flags or options passed it will print its configuration and quit.  The output formats are defined in `templates/`.
 
 ## Dependencies
 
@@ -31,6 +32,7 @@ With no config given it will default to `Bot.toml`, and with no flags or options
 
 ## Crates
 
+* [askama](https://github.com/djc/askama)
 * [chrono](https://github.com/chronotope/chrono)
 * [clap](https://github.com/kbknapp/clap-rs)
 * [email-format](https://github.com/mikedilger/email-format)
