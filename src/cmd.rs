@@ -115,7 +115,10 @@ pub fn run() -> Result<()> {
     let config = init_config(matches.value_of("config"))
         .chain_err(|| "Could not load configuration file")
         .chain_err(|| "Could not make heads or tails of that abomination of a config file")?;
-    info!("{}\n", config);
+    if log_enabled!(::log::Level::Info) {
+        info!("Initialized config: {:?}", &config.config_path);
+    }
+    debug!("{}\n", &config);
 
     // Grab a Context with a Brain
     // this takes ownership of Config - all further access is via this ctx

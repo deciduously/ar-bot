@@ -76,7 +76,6 @@ pub fn init_config(s: Option<&str>) -> Result<Config> {
             .chain_err(|| "Could not find config file")?)
             .chain_err(|| "Could not read config file")?;
     config.add_config_path(s.unwrap_or(DEFAULT_CONFIG))?;
-    info!("{}", config);
     Ok(config)
 }
 

@@ -48,8 +48,6 @@ impl Context {
         };
 
         ctx.read_fs()?;
-        info!("Intiailized Config.");
-        debug!("{}", ctx.config);
         Ok(ctx)
     }
 
