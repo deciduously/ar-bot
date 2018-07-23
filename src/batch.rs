@@ -1,6 +1,6 @@
 // batch.rs handles the string parsing and batching logic for eliminating redundant line items
 use brain::Brain;
-use chrono::prelude::*;
+//use chrono::prelude::*;
 use email::RawEmail;
 use errors::*;
 use log::Level;
@@ -210,7 +210,7 @@ impl Entry {
     fn from_email(e: &RawEmail) -> Result<Self> {
         lazy_static! {
             static ref AD_RE: Regex = Regex::new(r"^The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>\w+) Has Changed\r\nYou need to verify the Autodraft is now correct").unwrap();
-            static ref DATE_RE: Regex = Regex::new(r"^Date:( )+(?P<date>.*)\r\n").unwrap();
+            static ref DATE_RE: Regex = Regex::new(r"^Date:( )*(?P<date>.+)\r\n").unwrap();
         }
 
         let s = &format!(
@@ -230,7 +230,6 @@ impl Entry {
         // DateTime::parse_from_rfc2822 is available, but I'm not positive that's what this is
         //let dt: DateTime<FixedOffset> = DateTime::parse_from_rfc2822(&datetime_str)
         //    .chain_err(|| format!("Date in email {} was not rfc2822 formatted", e.filename))?;
-        let dt = format!("{}", datetime_str);
         if AD_RE.is_match(s) {
             debug!("MATCH: {}", s);
             let ad_captures = AD_RE.captures(s).unwrap();
@@ -239,7 +238,7 @@ impl Entry {
                     .parse::<u32>()
                     .chain_err(|| "Could not read iMIS id")?,
                 product: Product::from_str(&ad_captures["product"])?,
-                time: dt,
+                time: datetime_str.to_string(),
             })
         } else {
             debug!("{}", s);
@@ -329,12 +328,7 @@ mod tests {
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),
-                time: format!(
-                    "{}",
-                    FixedOffset::west(4 * 3600)
-                        .ymd(2018, 7, 21)
-                        .and_hms(16, 39, 04)
-                ),
+                time: "Sat, 21 Jul 2018 16:39:04 -0400".to_string(),
             },
         )
     }
@@ -363,12 +357,7 @@ mod tests {
     }
     #[test]
     fn test_add_entry_duplicate_id() {
-        let test_time = format!(
-            "{}",
-            FixedOffset::west(4 * 3600)
-                .ymd(2018, 7, 21)
-                .and_hms(16, 39, 04)
-        );
+        let test_time = "Sat, 21 Jul 2018 16:39:04 -0400".to_string();
         // Should add product to existing BatchEntry
         let mut batch = Batch::new();
         batch
@@ -412,12 +401,7 @@ mod tests {
     #[test]
     fn test_add_entry_duplicate_id_and_product() {
         // Should just add the time
-        let test_time = format!(
-            "{}",
-            FixedOffset::west(4 * 3600)
-                .ymd(2018, 7, 21)
-                .and_hms(16, 39, 04)
-        );
+        let test_time = "Sat, 21 Jul 2018 16:39:04 -0400".to_string();
         let mut batch = Batch::new();
         batch
             .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())

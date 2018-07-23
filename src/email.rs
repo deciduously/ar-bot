@@ -37,12 +37,13 @@ impl ::std::str::FromStr for RawEmail {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let mut email = Email::new("iMIS@jccgb.org", "Sat, 21 Jul 2018 16:39:04 -0400")
-            .chain_err(|| "Could not set email headers")?;
+        let date_str = "Sat, 21 Jul 2018 16:39:04 -0400";
+        let mut email =
+            Email::new("iMIS@jccgb.org", date_str).chain_err(|| "Could not set email headers")?;
         email.set_body(s).chain_err(|| "Could not set email body")?;
         // TODO
         Ok(RawEmail {
-            filename: format!("{}.html", format!("{}", email.get_date())),
+            filename: format!("{}.html", format!("{}", date_str)),
             contents: email,
         })
     }
