@@ -20,13 +20,13 @@
     <ul>
     {% for entry in entries %}
         <li>
-            <p>iMIS ID:<span class="emphasis">{{ entry.id|e }}</span><br/>Individual's Name: ______________________________</p><p>
+            <p>iMIS ID:<span class="emphasis">{{ entry.id|e }}</span><br/>Individual's Name: ___________________</p><p>
             {% if entry.alerts_vec().len() == 1 %}
                 Product
             {% else %}
                 Products
             {% endif %}
-            to check:<br/><br/>
+            to check:<br/>
             {% for alert in entry.alerts_vec() %}
                 <span class="product-name">{{ alert.0|e }}</span><br>(alert at
                 {% if alert.1.len() == 1 %}
@@ -36,8 +36,8 @@
                         <span class="time">{{ time|e }}</span>
                     {% endfor %}
                 {% endif %}
-                )</p><p><span class="calculation">Was:</span>__________ @ __________<br/><br/><br/>
-                <span class="calculation">New:</span>__________ @ __________</p><br/><br/>INIT: _____<br/>
+                )</p><p><span class="calculation">Was:</span>__________ @ __________</p>
+                <p><span class="calculation">New:</span>__________ @ __________</p><br/>INIT: _____<br/>
             {% endfor %}
         </li>
         <hr/>
