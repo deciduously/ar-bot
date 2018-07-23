@@ -24,7 +24,7 @@
             {% else %}
                 Products
             {% endif %}
-            to check:<br/<br/>
+            to check:<br/><br/>
             {% for alert in entry.alerts_vec() %}
                 <span class="product-name">{{ alert.0|e }}</span> (alert at
                 {% if alert.1.len() == 1 %}
