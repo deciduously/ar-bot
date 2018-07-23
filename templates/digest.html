@@ -4,23 +4,27 @@
 
 {% block head %}
     <style>
-        .emphasis {font-weight: bold}
-        .product-name {font-weight: lighter}
+        .emphasis {font-weight: bolder}
+        .product-name {font-weight: bold}
+        .product-separator {border-top: dotted 1px;}
         .time {font-style: italic}
+        .calculation {font-wieght: bold}
     </style>
 {% endblock %}
 
 {% block content %}
     <h1>Digest</h1>
+    <hr/>
     <ul>
     {% for entry in entries %}
         <li>
-            iMIS ID:<span class="emphasis">{{ entry.id|e }}</span>  Individual's Name: ______________________________</br>
+            <p>iMIS ID:<span class="emphasis">{{ entry.id|e }}</span><br/>Individual's Name: ______________________________</p><p>
             {% if entry.alerts_vec().len() == 1 %}
-                Product to check:<br/>
+                Product
             {% else %}
-                Products to check:<br/>
+                Products
             {% endif %}
+            to check:<br/<br/>
             {% for alert in entry.alerts_vec() %}
                 <span class="product-name">{{ alert.0|e }}</span> (alert at
                 {% if alert.1.len() == 1 %}
@@ -30,10 +34,11 @@
                         <span class="time">{{ time|e }}</span>
                     {% endfor %}
                 {% endif %}
-                )<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+                )</p><br/><br/><p><span class="calculation">Was:</span>__________ @ __________<br/><br/><br/><br/>
+                <span class="calculation">New:</span>__________ @ __________</p><br/><br/><br/><br/>INIT: _____<br/><br/>
             {% endfor %}
         </li>
-        <br/>
+        <br/><hr/><br/>
     {% endfor %}
     </ul>
 {% endblock %}
