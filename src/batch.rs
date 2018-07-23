@@ -9,12 +9,7 @@ use std::{collections::HashMap, fmt, str::FromStr};
 #[cfg(test)]
 use util::*;
 
-static DATE_OUT_FMT: &'static str = "%e %a %m/d %Y";
-//from http://man7.org/linux/man-pages/man3/strftime.3.html
-// turns out there's a stdlib fn, leaving for reference
-static RFC_2822_FMT: &'static str = "%a, %d %b %Y %T %z";
-
-type Alerts = HashMap<Product, Vec<DateTime<FixedOffset>>>;
+type Alerts = HashMap<Product, Vec<String>>;
 
 // The final batch
 // there should only be one BatchEntry per ID - that's literally the whole point of this app
@@ -54,7 +49,7 @@ impl Batch {
                     if id == *uid {
                         for (key, times) in &mut batch_entry.alerts {
                             if *key == product {
-                                times.push(e.time);
+                                times.push(e.time.clone());
                             }
                         }
                     }
@@ -79,7 +74,7 @@ impl Batch {
 
                 for (uid, batch_entry) in &mut self.entries {
                     if id == *uid {
-                        let times = vec![e.time];
+                        let times = vec![e.time.clone()];
                         batch_entry.alerts.entry(e.product.clone()).or_insert(times);
                     }
                 }
@@ -168,7 +163,7 @@ pub struct BatchEntry {
 impl BatchEntry {
     // Just returns the alerts as a vector of (Product, Vec<DateTime<Local>>)
     // is this necessary?
-    pub fn alerts_vec(&self) -> Vec<(Product, Vec<DateTime<FixedOffset>>)> {
+    pub fn alerts_vec(&self) -> Vec<(Product, Vec<String>)> {
         let mut ret = Vec::new();
         for (k, v) in &self.alerts {
             ret.push((k.clone(), v.clone()));
@@ -208,13 +203,14 @@ type Entries = HashMap<UserID, BatchEntry>;
 pub struct Entry {
     pub id: UserID,
     pub product: Product,
-    pub time: DateTime<FixedOffset>,
+    pub time: String,
 }
 
 impl Entry {
     fn from_email(e: &RawEmail) -> Result<Self> {
         lazy_static! {
             static ref AD_RE: Regex = Regex::new(r"^The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>\w+) Has Changed\r\nYou need to verify the Autodraft is now correct").unwrap();
+            static ref DATE_RE: Regex = Regex::new(r"^Date:( )+(?P<date>.*)\r\n").unwrap();
         }
 
         let s = &format!(
@@ -224,22 +220,25 @@ impl Entry {
 
         // TODO am I allowed to impl From<email_format::rfc5322::OrigDate> for chrono::DateTime without going through &str?
         let datetime_str_raw = format!("{}", e.contents.get_date());
-        // get_date() returns "Date:`rfc2822_str`" so I skip "Date:" and the trailing \r\n
-        let datetime_str = &datetime_str_raw[5..datetime_str_raw.len() - 2];
+        // get_date() returns "Date: `rfc2822_str`" so I skip "Date: " and the trailing \r\n
+        // This is just for the demo
+        // TODO write a proper regex
+        let dt_captures = DATE_RE.captures(&datetime_str_raw).unwrap();
+        let datetime_str = &dt_captures["date"];
 
-        println!("DTSTR: {}", datetime_str);
+        info!("DTSTR: {}", datetime_str);
         // DateTime::parse_from_rfc2822 is available, but I'm not positive that's what this is
-        let dt: DateTime<FixedOffset> = DateTime::parse_from_str(&datetime_str, RFC_2822_FMT)
-            .chain_err(|| format!("Date in email {} was not rfc2822 formatted", e.filename))?;
-
+        //let dt: DateTime<FixedOffset> = DateTime::parse_from_rfc2822(&datetime_str)
+        //    .chain_err(|| format!("Date in email {} was not rfc2822 formatted", e.filename))?;
+        let dt = format!("{}", datetime_str);
         if AD_RE.is_match(s) {
             debug!("MATCH: {}", s);
-            let captures = AD_RE.captures(s).unwrap();
+            let ad_captures = AD_RE.captures(s).unwrap();
             Ok(Entry {
-                id: (&captures["id"])
+                id: (&ad_captures["id"])
                     .parse::<u32>()
                     .chain_err(|| "Could not read iMIS id")?,
-                product: Product::from_str(&captures["product"])?,
+                product: Product::from_str(&ad_captures["product"])?,
                 time: dt,
             })
         } else {
@@ -254,9 +253,7 @@ impl fmt::Display for Entry {
         write!(
             f,
             "ID {}, PRODUCT {}, TIME {}",
-            self.id,
-            self.product,
-            self.time.format(DATE_OUT_FMT)
+            self.id, self.product, self.time,
         )
     }
 }
@@ -332,9 +329,12 @@ mod tests {
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),
-                time: FixedOffset::west(4 * 3600)
-                    .ymd(2018, 7, 21)
-                    .and_hms(16, 39, 04),
+                time: format!(
+                    "{}",
+                    FixedOffset::west(4 * 3600)
+                        .ymd(2018, 7, 21)
+                        .and_hms(16, 39, 04)
+                ),
             },
         )
     }
@@ -363,9 +363,12 @@ mod tests {
     }
     #[test]
     fn test_add_entry_duplicate_id() {
-        let test_time = FixedOffset::west(4 * 3600)
-            .ymd(2018, 7, 21)
-            .and_hms(16, 39, 04);
+        let test_time = format!(
+            "{}",
+            FixedOffset::west(4 * 3600)
+                .ymd(2018, 7, 21)
+                .and_hms(16, 39, 04)
+        );
         // Should add product to existing BatchEntry
         let mut batch = Batch::new();
         batch
@@ -377,10 +380,10 @@ mod tests {
         let mut test_alerts = HashMap::new();
         test_alerts
             .entry(Product::Other("COOL_PROOD".into()))
-            .or_insert(vec![test_time]);
+            .or_insert(vec![test_time.clone()]);
         test_alerts
             .entry(Product::Other("COOL_PROD".into()))
-            .or_insert(vec![test_time]);
+            .or_insert(vec![test_time.clone()]);
         let test_batch_entry = BatchEntry {
             id: 12345,
             alerts: test_alerts,
@@ -409,9 +412,12 @@ mod tests {
     #[test]
     fn test_add_entry_duplicate_id_and_product() {
         // Should just add the time
-        let test_time = FixedOffset::west(4 * 3600)
-            .ymd(2018, 7, 21)
-            .and_hms(16, 39, 04);
+        let test_time = format!(
+            "{}",
+            FixedOffset::west(4 * 3600)
+                .ymd(2018, 7, 21)
+                .and_hms(16, 39, 04)
+        );
         let mut batch = Batch::new();
         batch
             .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
@@ -421,7 +427,7 @@ mod tests {
             .unwrap();
         //let test_batch = Batch::test_second_email_str(TEST_COOL_STR);
         let mut test_alerts = HashMap::new();
-        let test_times = vec![test_time, test_time];
+        let test_times = vec![test_time.clone(), test_time.clone()];
         test_alerts
             .entry(Product::Other("COOL_PROD".into()))
             .or_insert(test_times);

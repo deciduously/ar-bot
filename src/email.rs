@@ -1,11 +1,10 @@
 // email.rs handles the input and output for the app
 
-#[cfg(test)]
-use chrono::prelude::*;
 use email_format::rfc5322::Parsable;
 use email_format::Email;
 use errors::*;
 use std::fmt;
+//use util::DATE_OUT_FMT;
 
 #[derive(Debug)]
 pub struct RawEmail {
@@ -42,11 +41,8 @@ impl ::std::str::FromStr for RawEmail {
             .chain_err(|| "Could not set email headers")?;
         email.set_body(s).chain_err(|| "Could not set email body")?;
         // TODO
-        let time = FixedOffset::west(4 * 3600)
-            .ymd(2018, 7, 21)
-            .and_hms(16, 39, 04);
         Ok(RawEmail {
-            filename: format!("{}.html", time.timestamp()),
+            filename: format!("{}.html", format!("{}", email.get_date())),
             contents: email,
         })
     }
