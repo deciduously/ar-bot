@@ -7,6 +7,7 @@ use std::{
     fmt, fs::{create_dir, read_dir}, path::PathBuf,
 };
 use util::*;
+use uuid::Uuid;
 
 // This is my internal folder
 // I want to be able to serialize/deserialize the contents
@@ -61,9 +62,10 @@ impl Context {
     // this is still prpbably all relevant
     // TODO proper Path usage.  Lets start here.
     pub fn read_fs(&mut self) -> Result<()> {
-        lazy_static! {
-            static ref DIGEST_RE: Regex = Regex::new(r"^digest-(?P<timestamp>\d+).html").unwrap();
-        }
+        //keeping in case I need this for the report
+        //lazy_static! {
+        //    static ref DIGEST_RE: Regex = Regex::new(r"^digest-(?P<timestamp>\d+).html").unwrap();
+        //}
 
         let brain_path = &self.config.directory.path;
 
@@ -104,10 +106,17 @@ impl Context {
             } else {
                 // TODO check if its actually an email?
                 // what do we do with non-expected files?
-                // FIXME this is where the tests are crashing and I dont know why
+                // TODO these input files can (and will) contain multiple emails
+                // When moving to hx/ I want to store each one separately still.
+                // this will make it much easier to include this info in the daily report
                 info!("READ: {}", p_str);
                 let contents = file_contents_from_str_path(p_str)?;
-                emails.push(RawEmail::new(p_str, &contents).chain_err(|| "Could not add email")?);
+                let email_files = split_emails(&contents);
+                for e in email_files {
+                    let filename = Uuid::new_v4(); // Just assigns a random number
+                    emails.push(RawEmail::new(&filename.to_string(), &e)
+                        .chain_err(|| "Could not add email")?);
+                }
             }
         }
 
@@ -154,6 +163,23 @@ impl Context {
     //
     //        Ok(())
     //    }
+}
+
+// split_emails takes a string containing multiple emails and returns a vec with each email separated
+fn split_emails(s: &str) -> Vec<String> {
+    info!("Splitting input file into separate emails");
+    // look for the starts
+    lazy_static! {
+        static ref EMAIL_RE: Regex = Regex::new(r"(?P<email>From.+correct)").unwrap();
+    }
+    let mut ret = Vec::new();
+    let caps = EMAIL_RE.captures_iter(s);
+    for cap in caps {
+        debug!("Found email {:?}", &cap["email"]);
+        ret.push(format!("{:?}", &cap["emails"]));
+    }
+    //ret
+    vec![s.to_string()] // TEMPORARY
 }
 
 // TODO add arguments to only modify/read in parts of the whole thing

@@ -33,7 +33,7 @@ With no config given it will default to `Bot.toml`, and with no flags or options
 
 ## Crates
 
-[askama](https://github.com/djc/askama), [chrono](https://github.com/chronotope/chrono), [clap](https://github.com/kbknapp/clap-rs), [email-format](https://github.com/mikedilger/email-format), [error-chain](https://github.com/rust-lang-nursery/error-chain), [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs), [log](https://githb.com/rust-lang-nursery/log), [pretty_assertions](https://github.com/colin-kiegel/rust-pretty-assertions), [pretty_env_logger](https://github.com/seanmonstar/pretty_env_logger/), [regex](https://github.com/rust-lang/regex), [serde/serde_derive](https://serde.rs), [toml](https://github.com/alexcrichton/toml-rs), [rand](https://github.com/rust-lang-nursery/rand)
+[askama](https://github.com/djc/askama), [chrono](https://github.com/chronotope/chrono), [clap](https://github.com/kbknapp/clap-rs), [email-format](https://github.com/mikedilger/email-format), [error-chain](https://github.com/rust-lang-nursery/error-chain), [lazy_static](https://github.com/rust-lang-nursery/lazy-static.rs), [log](https://githb.com/rust-lang-nursery/log), [pretty_assertions](https://github.com/colin-kiegel/rust-pretty-assertions), [pretty_env_logger](https://github.com/seanmonstar/pretty_env_logger/), [regex](https://github.com/rust-lang/regex), [serde/serde_derive](https://serde.rs), [toml](https://github.com/alexcrichton/toml-rs), [rand](https://github.com/rust-lang-nursery/rand), [uuid](https://github.com/uuid-rs/uuid)
 
 ## Notes
 
