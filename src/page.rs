@@ -2,6 +2,7 @@
 use askama::Template;
 use batch::{Batch, BatchEntry};
 use brain::Context;
+use chrono::prelude::*;
 use errors::*;
 use std::{fs::File, io::prelude::*};
 
@@ -25,7 +26,7 @@ struct SkelTemplate {}
 pub fn write_digest(ctx: &Context) -> Result<()> {
     let batch = Batch::from_brain(&ctx.brain)?;
     let mut digest_path = ctx.hx_path();
-    digest_path.push("TEMPDATE.digest.html");
+    digest_path.push(format!("digest-{}.html", Local::now().timestamp()));
     let mut digest_file = File::create(digest_path).chain_err(|| "Could not create digest file")?;
     let mut entries = Vec::new();
 

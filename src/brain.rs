@@ -62,7 +62,7 @@ impl Context {
     // TODO proper Path usage.  Lets start here.
     pub fn read_fs(&mut self) -> Result<()> {
         lazy_static! {
-            static ref BATCH_RE: Regex = Regex::new(r"^batch-TEMPDATE.html").unwrap();
+            static ref DIGEST_RE: Regex = Regex::new(r"^digest-(?P<timestamp>\d+).html").unwrap();
         }
 
         let brain_path = &self.config.directory.path;
@@ -77,10 +77,10 @@ impl Context {
         // This should be:
         // brain/
         // |  hx/ - Do HX later
-        // |    *.html
+        // |    digest-TIMESTAMP.html
+        // |    TIMESTAMP.html
         // |  blah.html
         // |  blah2.html
-        // |  batch<DATETIME>.html
 
         // There will be a cleanup task (maybe as part of report() that will push everything to hx)
         // dir_lisitng holds str paths of each file in Brain
@@ -94,7 +94,12 @@ impl Context {
         let mut emails = Vec::new();
         for l in &dir_listing {
             let p_str = l.to_str().unwrap();
-            if BATCH_RE.is_match(p_str) {
+            if &p_str
+                == &self.hx_path()
+                    .to_str()
+                    .chain_err(|| "Could not read own HX path")?
+            {
+                debug!("Skipping hx dir {}", p_str);
                 continue;
             } else {
                 // TODO check if its actually an email?
