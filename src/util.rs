@@ -1,4 +1,4 @@
-// util.rs holds, well, utility functions
+// util.rs holds, well, utility functions, as well as things I didn't know where else to put
 use errors::*;
 use std::io::{prelude::*, BufReader};
 

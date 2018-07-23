@@ -9,7 +9,12 @@ use std::{collections::HashMap, fmt, str::FromStr};
 #[cfg(test)]
 use util::*;
 
-type Alerts = HashMap<Product, Vec<DateTime<Utc>>>;
+static DATE_OUT_FMT: &'static str = "%e %a %m/d %Y";
+//from http://man7.org/linux/man-pages/man3/strftime.3.html
+// turns out there's a stdlib fn, leaving for reference
+static RFC_2822_FMT: &'static str = "%a, %d %b %Y %T %z";
+
+type Alerts = HashMap<Product, Vec<DateTime<FixedOffset>>>;
 
 // The final batch
 // there should only be one BatchEntry per ID - that's literally the whole point of this app
@@ -161,9 +166,9 @@ pub struct BatchEntry {
 }
 
 impl BatchEntry {
-    // Just returns the alerts as a vector of (Product, Vec<DateTime<Utc>>)
+    // Just returns the alerts as a vector of (Product, Vec<DateTime<Local>>)
     // is this necessary?
-    pub fn alerts_vec(&self) -> Vec<(Product, Vec<DateTime<Utc>>)> {
+    pub fn alerts_vec(&self) -> Vec<(Product, Vec<DateTime<FixedOffset>>)> {
         let mut ret = Vec::new();
         for (k, v) in &self.alerts {
             ret.push((k.clone(), v.clone()));
@@ -203,7 +208,7 @@ type Entries = HashMap<UserID, BatchEntry>;
 pub struct Entry {
     pub id: UserID,
     pub product: Product,
-    pub time: DateTime<Utc>,
+    pub time: DateTime<FixedOffset>,
 }
 
 impl Entry {
@@ -217,6 +222,16 @@ impl Entry {
             e.contents.get_body().chain_err(|| "No email body found")?
         );
 
+        // TODO am I allowed to impl From<email_format::rfc5322::OrigDate> for chrono::DateTime without going through &str?
+        let datetime_str_raw = format!("{}", e.contents.get_date());
+        // get_date() returns "Date:`rfc2822_str`" so I skip "Date:" and the trailing \r\n
+        let datetime_str = &datetime_str_raw[5..datetime_str_raw.len() - 2];
+
+        println!("DTSTR: {}", datetime_str);
+        // DateTime::parse_from_rfc2822 is available, but I'm not positive that's what this is
+        let dt: DateTime<FixedOffset> = DateTime::parse_from_str(&datetime_str, RFC_2822_FMT)
+            .chain_err(|| format!("Date in email {} was not rfc2822 formatted", e.filename))?;
+
         if AD_RE.is_match(s) {
             debug!("MATCH: {}", s);
             let captures = AD_RE.captures(s).unwrap();
@@ -225,7 +240,7 @@ impl Entry {
                     .parse::<u32>()
                     .chain_err(|| "Could not read iMIS id")?,
                 product: Product::from_str(&captures["product"])?,
-                time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
+                time: dt,
             })
         } else {
             debug!("{}", s);
@@ -239,7 +254,9 @@ impl fmt::Display for Entry {
         write!(
             f,
             "ID {}, PRODUCT {}, TIME {}",
-            self.id, self.product, self.time
+            self.id,
+            self.product,
+            self.time.format(DATE_OUT_FMT)
         )
     }
 }
@@ -315,7 +332,9 @@ mod tests {
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),
-                time: Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
+                time: FixedOffset::west(4 * 3600)
+                    .ymd(2018, 7, 21)
+                    .and_hms(16, 39, 04),
             },
         )
     }
@@ -344,6 +363,9 @@ mod tests {
     }
     #[test]
     fn test_add_entry_duplicate_id() {
+        let test_time = FixedOffset::west(4 * 3600)
+            .ymd(2018, 7, 21)
+            .and_hms(16, 39, 04);
         // Should add product to existing BatchEntry
         let mut batch = Batch::new();
         batch
@@ -355,10 +377,10 @@ mod tests {
         let mut test_alerts = HashMap::new();
         test_alerts
             .entry(Product::Other("COOL_PROOD".into()))
-            .or_insert(vec![Utc.ymd(2000, 1, 1).and_hms(9, 10, 11)]);
+            .or_insert(vec![test_time]);
         test_alerts
             .entry(Product::Other("COOL_PROD".into()))
-            .or_insert(vec![Utc.ymd(2000, 1, 1).and_hms(9, 10, 11)]);
+            .or_insert(vec![test_time]);
         let test_batch_entry = BatchEntry {
             id: 12345,
             alerts: test_alerts,
@@ -387,6 +409,9 @@ mod tests {
     #[test]
     fn test_add_entry_duplicate_id_and_product() {
         // Should just add the time
+        let test_time = FixedOffset::west(4 * 3600)
+            .ymd(2018, 7, 21)
+            .and_hms(16, 39, 04);
         let mut batch = Batch::new();
         batch
             .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
@@ -396,10 +421,7 @@ mod tests {
             .unwrap();
         //let test_batch = Batch::test_second_email_str(TEST_COOL_STR);
         let mut test_alerts = HashMap::new();
-        let test_times = vec![
-            Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
-            Utc.ymd(2000, 1, 1).and_hms(9, 10, 11),
-        ];
+        let test_times = vec![test_time, test_time];
         test_alerts
             .entry(Product::Other("COOL_PROD".into()))
             .or_insert(test_times);
