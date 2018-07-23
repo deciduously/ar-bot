@@ -3,17 +3,19 @@
 {% block title %}Digest{% endblock %}
 
 {% block head %}
-    <style>
+<style>
+        .page-header {text-align: center}
         .emphasis {font-weight: bolder}
         .product-name {font-weight: bold}
-        .product-separator {border-top: dotted 1px;}
         .time {font-style: italic}
         .calculation {font-weight: bold}
+	ul {columns: 2;
+	    list-style-type: none;}
     </style>
 {% endblock %}
 
 {% block content %}
-    <h1>Digest</h1>
+    <h1 class+"page-header">Digest</h1>
     <hr/>
     <ul>
     {% for entry in entries %}
@@ -26,7 +28,7 @@
             {% endif %}
             to check:<br/><br/>
             {% for alert in entry.alerts_vec() %}
-                <span class="product-name">{{ alert.0|e }}</span> (alert at
+                <span class="product-name">{{ alert.0|e }}</span><br>(alert at
                 {% if alert.1.len() == 1 %}
                     <span class="time">{{ alert.1[0]|e }}</span>
                 {% else %}
@@ -34,11 +36,11 @@
                         <span class="time">{{ time|e }}</span>
                     {% endfor %}
                 {% endif %}
-                )</p><br/><br/><p><span class="calculation">Was:</span>__________ @ __________<br/><br/><br/><br/>
-                <span class="calculation">New:</span>__________ @ __________</p><br/><br/><br/><br/>INIT: _____<br/><br/>
+                )</p><p><span class="calculation">Was:</span>__________ @ __________<br/><br/><br/>
+                <span class="calculation">New:</span>__________ @ __________</p><br/><br/>INIT: _____<br/>
             {% endfor %}
         </li>
-        <br/><hr/><br/>
+        <hr/>
     {% endfor %}
     </ul>
 {% endblock %}
