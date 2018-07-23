@@ -100,7 +100,7 @@ pub fn run() -> Result<()> {
             Arg::with_name("verbose")
                 .short("v")
                 .multiple(true)
-                .help("Set RUST_LOG verbosity.  There are three levels: info, debug, and trace.  Repeat the flag to set level: -v -v -v or -vvv, keeping in mind that 2 and 3 are usually the same unless something goes wrong")
+                .help("Set RUST_LOG verbosity.  There are three levels: info, debug, and trace.  Repeat the flag to set level: -v -v -v or -vvv.")
         )
         // Arg cleanup
         // Arg search_hx - maybe use ripgrep!
@@ -146,20 +146,23 @@ pub fn run() -> Result<()> {
     }
 
     println!("Goodbye!");
+    if var("RUST_LOG").chain_err(|| "Could read RUST_LOG on cleanup")? == "trace" {
+        remove_var("RUST_BACKTRACE");
+    }
     remove_var("RUST_LOG");
 
     Ok(())
 }
 
 fn init_logging(level: u64) -> Result<()> {
-    if level == 0 {
-        // dont even set the variable
-        return Ok(());
-    };
     let verbosity = match level {
+        0 => "warn",
         1 => "info",
         2 => "debug",
         3 | _ => "trace",
+    };
+    if verbosity == "trace" {
+        set_var("RUST_BACKTRACE", "1");
     };
     set_var("RUST_LOG", verbosity);
     println!(

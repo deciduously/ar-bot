@@ -16,7 +16,7 @@ FLAGS:
 * `-h, --help`       Prints help information
 * `-p, --preview`    Displays the current contents of the batch
 * `-r, --report`     Daily report comparing inputs to outputs for the day
-* `-v, --verbose`    Set RUST_LOG verbosity.  There are three levels: error, info, and trace.  Repeat the flag to set level: -v -v -v or -vvv keeping in mind that 2 and 3 are usually the same unless something goes wrong
+* `-v, --verbose`    "Set RUST_LOG verbosity.  There are three levels: info, debug, and trace.  Repeat the flag to set level: -v, -vv, -vvv.
 * `-V, --version`    Prints version information
 
 OPTIONS:
