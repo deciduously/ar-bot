@@ -226,7 +226,7 @@ impl Entry {
         let dt_captures = DATE_RE.captures(&datetime_str_raw).unwrap();
         let datetime_str = &dt_captures["date"];
 
-        info!("DTSTR: {}", datetime_str);
+        debug!("DTSTR: {}", datetime_str);
         // DateTime::parse_from_rfc2822 is available, but I'm not positive that's what this is
         //let dt: DateTime<FixedOffset> = DateTime::parse_from_rfc2822(&datetime_str)
         //    .chain_err(|| format!("Date in email {} was not rfc2822 formatted", e.filename))?;

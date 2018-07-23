@@ -100,7 +100,7 @@ pub fn run() -> Result<()> {
             Arg::with_name("verbose")
                 .short("v")
                 .multiple(true)
-                .help("Set RUST_LOG verbosity.  There are three levels: info, debug, and trace.  Repeat the flag to set level: -v -v -v or -vvv.")
+                .help("Set RUST_LOG verbosity.  There are three levels: info, debug, and trace.  Repeat the flag to set level: -v, -vv, -vvv.")
         )
         // Arg cleanup
         // Arg search_hx - maybe use ripgrep!
@@ -134,23 +134,28 @@ pub fn run() -> Result<()> {
     //}
 
     if matches.is_present("digest") {
+        debug!("Calling Digest function per command line");
         digest(&ctx)?;
     }
 
     if matches.is_present("report") {
+        debug!("Calling Report function per command line");
         report(&ctx)?;
     }
 
     if matches.is_present("preview") {
+        debug!("Calling Preview function per command line");
         preview(&mut ctx)?;
     }
 
-    println!("Goodbye!");
     if var("RUST_LOG").chain_err(|| "Could read RUST_LOG on cleanup")? == "trace" {
         remove_var("RUST_BACKTRACE");
     }
     remove_var("RUST_LOG");
+    info!("Cleaned up logging environment variables");
 
+    info!("Everything clean");
+    println!("Goodbye!");
     Ok(())
 }
 
@@ -165,7 +170,7 @@ fn init_logging(level: u64) -> Result<()> {
         set_var("RUST_BACKTRACE", "1");
     };
     set_var("RUST_LOG", verbosity);
-    println!(
+    info!(
         "Attempting to set logger to {}",
         var("RUST_LOG").chain_err(|| "Failed to set verbosity level")?
     );
