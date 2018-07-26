@@ -1,7 +1,7 @@
 // batch.rs handles the string parsing and batching logic for eliminating redundant line items
 use brain::Brain;
 //use chrono::prelude::*;
-use email::RawEmail;
+use email::Email;
 use errors::*;
 use log::Level;
 use regex::Regex;
@@ -119,14 +119,14 @@ impl Batch {
     pub fn test() -> Self {
         let mut batch = Batch::new();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         batch
     }
     #[cfg(test)]
     pub fn test_second_email_str(s: &str) -> Self {
-        let e = Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap();
-        let e_second = Entry::from_email(&RawEmail::from_str(s).unwrap()).unwrap();
+        let e = Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap();
+        let e_second = Entry::from_email(&Email::from_str(s).unwrap()).unwrap();
         let mut entries = Entries::new();
         entries.entry(e.id).or_insert(BatchEntry::from(e));
         entries
@@ -207,7 +207,7 @@ pub struct Entry {
 }
 
 impl Entry {
-    fn from_email(e: &RawEmail) -> Result<Self> {
+    fn from_email(e: &Email) -> Result<Self> {
         lazy_static! {
             // this should go with the splitting logic, and we should pass in a struct to from_email
             static ref AD_RE: Regex = Regex::new(r"From:.+\s+Sent:\s+(?P<date>.+)\r\nTo:.+\s+Subject:.+\s+The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>\w+) Has Changed\s+You need to verify the Autodraft is now correct").unwrap();
@@ -303,12 +303,12 @@ type UserID = u32;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use email::RawEmail;
+    use email::Email;
 
     #[test]
     fn test_entry_from_str() {
         assert_eq!(
-            Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap(),
+            Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap(),
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),
@@ -321,7 +321,7 @@ mod tests {
         // Should create a new BatchEntry
         let mut batch = Batch::new();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         let test_batch = Batch::test();
         assert_eq!(batch, test_batch)
@@ -331,10 +331,10 @@ mod tests {
         // Should create a second BatchEntry
         let mut batch = Batch::new();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_DIF_BOTH).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_DIF_BOTH).unwrap()).unwrap())
             .unwrap();
         let test_batch = Batch::test_second_email_str(TEST_DIF_BOTH);
         assert_eq!(batch, test_batch)
@@ -345,10 +345,10 @@ mod tests {
         // Should add product to existing BatchEntry
         let mut batch = Batch::new();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_DIF_PROD).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_DIF_PROD).unwrap()).unwrap())
             .unwrap();
         let mut test_alerts = HashMap::new();
         test_alerts
@@ -374,10 +374,10 @@ mod tests {
         // Make a BatchEntry for a the new ID, it doesnt matter if two products are the same
         let mut batch = Batch::new();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_DIF_ID).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_DIF_ID).unwrap()).unwrap())
             .unwrap();
         let test_batch = Batch::test_second_email_str(TEST_DIF_ID); // Bath::test_second_email_str isn't smart like that
         assert_eq!(batch, test_batch)
@@ -388,10 +388,10 @@ mod tests {
         let test_time = "Saturday, July 21, 2018 4:39 PM".to_string();
         let mut batch = Batch::new();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         batch
-            .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())
+            .add_entry(Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap())
             .unwrap();
         //let test_batch = Batch::test_second_email_str(TEST_COOL_STR);
         let mut test_alerts = HashMap::new();
@@ -414,13 +414,13 @@ mod tests {
     #[test]
     fn test_classify_new_entry() {
         let test_batch = Batch::test();
-        let test_entry = Entry::from_email(&RawEmail::from_str(TEST_DIF_BOTH).unwrap()).unwrap();
+        let test_entry = Entry::from_email(&Email::from_str(TEST_DIF_BOTH).unwrap()).unwrap();
         assert_eq!(test_batch.classify(&test_entry), EntryClass::New)
     }
     #[test]
     fn test_classify_duplicate_id_and_product() {
         let test_batch = Batch::test();
-        let test_entry = Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap();
+        let test_entry = Entry::from_email(&Email::from_str(TEST_COOL_STR).unwrap()).unwrap();
         assert_eq!(
             test_batch.classify(&test_entry),
             EntryClass::Duplicate((12345, Product::from_str("COOL_PROD").unwrap()))
@@ -429,7 +429,7 @@ mod tests {
     #[test]
     fn test_classify_duplicate_id() {
         let test_batch = Batch::test();
-        let test_entry = Entry::from_email(&RawEmail::from_str(TEST_DIF_PROD).unwrap()).unwrap();
+        let test_entry = Entry::from_email(&Email::from_str(TEST_DIF_PROD).unwrap()).unwrap();
         assert_eq!(
             test_batch.classify(&test_entry),
             EntryClass::NewProduct(12345)
@@ -438,7 +438,7 @@ mod tests {
     #[test]
     fn test_classify_duplicate_prod() {
         let test_batch = Batch::test();
-        let test_entry = Entry::from_email(&RawEmail::from_str(TEST_DIF_ID).unwrap()).unwrap();
+        let test_entry = Entry::from_email(&Email::from_str(TEST_DIF_ID).unwrap()).unwrap();
         assert_eq!(test_batch.classify(&test_entry), EntryClass::New)
     }
 }

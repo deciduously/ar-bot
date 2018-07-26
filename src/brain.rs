@@ -1,6 +1,6 @@
 // brain.rs handles all internal storage directory access
 use config::Config;
-use email::RawEmail;
+use email::Email;
 use errors::*;
 use regex::Regex;
 use std::{
@@ -13,7 +13,7 @@ use uuid::Uuid;
 // I want to be able to serialize/deserialize the contents
 #[derive(Debug)]
 pub struct Brain {
-    pub emails: Vec<RawEmail>,
+    pub emails: Vec<Email>,
 }
 
 impl Brain {
@@ -78,7 +78,7 @@ impl Context {
 
         // This should be:
         // brain/
-        // |  hx/ - Do HX later
+        // |  hx/
         // |    digest-TIMESTAMP.html
         // |    TIMESTAMP.html
         // |  blah.html
@@ -106,6 +106,7 @@ impl Context {
             } else {
                 // TODO check if its actually an email?
                 // what do we do with non-expected files?
+                
                 // TODO these input files can (and will) contain multiple emails
                 // When moving to hx/ I want to store each one separately still.
                 // this will make it much easier to include this info in the daily report
@@ -114,7 +115,7 @@ impl Context {
                 let email_files = split_emails(&contents);
                 for e in email_files {
                     let filename = Uuid::new_v4(); // Just assigns a random number
-                    emails.push(RawEmail::new(&filename.to_string(), &e)
+                    emails.push(Email::new(&filename.to_string(), &e)
                         .chain_err(|| "Could not add email")?);
                 }
             }
@@ -199,4 +200,8 @@ mod tests {
     //fn test_initialize_not_empty() {
 
     //}
+    #[test]
+    fn test_split_emails() {
+        assert!(true);
+    }
 }
