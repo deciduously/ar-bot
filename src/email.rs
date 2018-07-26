@@ -1,7 +1,7 @@
 // email.rs handles the input and output for the app
 
-use email_format::rfc5322::Parsable;
-use email_format::Email;
+// I dont think you need email_format - rip it out.
+// we're just passing around strings.
 use errors::*;
 use std::fmt;
 //use util::DATE_OUT_FMT;
@@ -9,18 +9,15 @@ use std::fmt;
 #[derive(Debug)]
 pub struct RawEmail {
     pub filename: String,
-    pub contents: Email,
+    pub contents: String,
 }
 
 impl RawEmail {
     pub fn new(filename: &str, contents: &str) -> Result<Self> {
-        debug!("PARSE: {}", contents);
-        let (email, remainder) =
-            Email::parse(contents.as_bytes()).chain_err(|| "Could not parse email")?;
-        assert_eq!(remainder.len(), 0);
+        debug!("EMAIL FOUND: {}", contents);
         Ok(RawEmail {
             filename: filename.into(),
-            contents: email,
+            contents: contents.into(),
         })
     }
 }
@@ -37,14 +34,12 @@ impl ::std::str::FromStr for RawEmail {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let date_str = "Sat, 21 Jul 2018 16:39:04 -0400";
-        let mut email =
-            Email::new("iMIS@jccgb.org", date_str).chain_err(|| "Could not set email headers")?;
-        email.set_body(s).chain_err(|| "Could not set email body")?;
-        // TODO
+        let mut email_contents = String::from("From: iMIS <iMIS@jccgb.org>\r\nSent: Saturday, July 21, 2018 4:39 PM\r\nTo: Some People; Whose Names; Are Omitted\r\nSubject: Invoice Charge Change for Super Nifty Autodraft\r\n\r\n");
+        email_contents.push_str(s);
+        println!("RAWFROMSTR: {}", email_contents);
         Ok(RawEmail {
-            filename: format!("{}.html", format!("{}", date_str)),
-            contents: email,
+            filename: format!("Saturday, July 21, 2018 4:39 PM.html"),
+            contents: email_contents,
         })
     }
 }

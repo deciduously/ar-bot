@@ -209,27 +209,11 @@ pub struct Entry {
 impl Entry {
     fn from_email(e: &RawEmail) -> Result<Self> {
         lazy_static! {
-            static ref AD_RE: Regex = Regex::new(r"^The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>\w+) Has Changed\r\nYou need to verify the Autodraft is now correct").unwrap();
-            static ref DATE_RE: Regex = Regex::new(r"^Date:( )*(?P<date>.+)\r\n").unwrap();
+            // this should go with the splitting logic, and we should pass in a struct to from_email
+            static ref AD_RE: Regex = Regex::new(r"From:.+\s+Sent:\s+(?P<date>.+)\r\nTo:.+\s+Subject:.+\s+The \w+ Invoice For iMIS ID (?P<id>\d+) For the Product (?P<product>\w+) Has Changed\s+You need to verify the Autodraft is now correct").unwrap();
         }
+        let s = &e.contents;
 
-        let s = &format!(
-            "{}",
-            e.contents.get_body().chain_err(|| "No email body found")?
-        );
-
-        // TODO am I allowed to impl From<email_format::rfc5322::OrigDate> for chrono::DateTime without going through &str?
-        let datetime_str_raw = format!("{}", e.contents.get_date());
-        // get_date() returns "Date: `rfc2822_str`" so I skip "Date: " and the trailing \r\n
-        // This is just for the demo
-        // TODO write a proper regex
-        let dt_captures = DATE_RE.captures(&datetime_str_raw).unwrap();
-        let datetime_str = &dt_captures["date"];
-
-        debug!("DTSTR: {}", datetime_str);
-        // DateTime::parse_from_rfc2822 is available, but I'm not positive that's what this is
-        //let dt: DateTime<FixedOffset> = DateTime::parse_from_rfc2822(&datetime_str)
-        //    .chain_err(|| format!("Date in email {} was not rfc2822 formatted", e.filename))?;
         if AD_RE.is_match(s) {
             debug!("MATCH: {}", s);
             let ad_captures = AD_RE.captures(s).unwrap();
@@ -238,7 +222,7 @@ impl Entry {
                     .parse::<u32>()
                     .chain_err(|| "Could not read iMIS id")?,
                 product: Product::from_str(&ad_captures["product"])?,
-                time: datetime_str.to_string(),
+                time: ad_captures["date"].to_string(),
             })
         } else {
             debug!("{}", s);
@@ -328,7 +312,7 @@ mod tests {
             Entry {
                 id: 12345,
                 product: Product::Other(String::from("COOL_PROD")),
-                time: "Sat, 21 Jul 2018 16:39:04 -0400".to_string(),
+                time: "Saturday, July 21, 2018 4:39 PM".to_string(),
             },
         )
     }
@@ -357,7 +341,7 @@ mod tests {
     }
     #[test]
     fn test_add_entry_duplicate_id() {
-        let test_time = "Sat, 21 Jul 2018 16:39:04 -0400".to_string();
+        let test_time = "Saturday, July 21, 2018 4:39 PM".to_string();
         // Should add product to existing BatchEntry
         let mut batch = Batch::new();
         batch
@@ -401,7 +385,7 @@ mod tests {
     #[test]
     fn test_add_entry_duplicate_id_and_product() {
         // Should just add the time
-        let test_time = "Sat, 21 Jul 2018 16:39:04 -0400".to_string();
+        let test_time = "Saturday, July 21, 2018 4:39 PM".to_string();
         let mut batch = Batch::new();
         batch
             .add_entry(Entry::from_email(&RawEmail::from_str(TEST_COOL_STR).unwrap()).unwrap())

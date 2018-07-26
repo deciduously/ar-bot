@@ -96,8 +96,8 @@ impl Context {
         let mut emails = Vec::new();
         for l in &dir_listing {
             let p_str = l.to_str().unwrap();
-            if &p_str
-                == &self.hx_path()
+            if p_str
+                == self.hx_path()
                     .to_str()
                     .chain_err(|| "Could not read own HX path")?
             {

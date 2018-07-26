@@ -5,7 +5,7 @@
 extern crate askama;
 extern crate chrono;
 extern crate clap;
-extern crate email_format;
+// extern crate email_format;
 #[macro_use]
 extern crate error_chain;
 #[macro_use]
