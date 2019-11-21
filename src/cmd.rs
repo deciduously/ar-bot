@@ -1,17 +1,13 @@
 // cmd.rs holds the top-level commands, all returning errors::Result<_>
-use batch::Batch;
-use brain::Context;
+use crate::{batch::Batch, brain::Context, config::init_config, errors::*, page::*};
 use clap::{App, Arg};
-use config::init_config;
-//use email::email;
-use errors::*;
-use page::*;
 use pretty_env_logger;
+use log::*;
 use std::{
     env::{remove_var, set_var, var}, fs::create_dir,
 };
 
-static VERSION: &'static str = "0.1.0";
+static VERSION: &'static str = "0.1.0";  // read from CARGO!
 
 // Does two things:
 // 1. Creates DATETIME.digest.html under hx/

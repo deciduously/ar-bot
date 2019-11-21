@@ -2,7 +2,8 @@
 
 // I dont think you need email_format - rip it out.
 // we're just passing around strings.
-use errors::*;
+use crate::errors::*;
+use log::*;
 use std::fmt;
 //use util::DATE_OUT_FMT;
 
@@ -34,7 +35,7 @@ impl fmt::Display for Email {
 
 // This is only used for testing
 #[cfg(test)]
-impl ::std::str::FromStr for Email {
+impl std::str::FromStr for Email {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self> {

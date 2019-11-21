@@ -1,5 +1,5 @@
 // util.rs holds, well, utility functions, as well as things I didn't know where else to put
-use errors::*;
+use crate::errors::*;
 use std::io::{prelude::*, BufReader};
 
 #[cfg(test)]

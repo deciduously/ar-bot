@@ -1,12 +1,11 @@
 // brain.rs handles all internal storage directory access
-use config::Config;
-use email::Email;
-use errors::*;
+use crate::{config::Config, email::Email, errors::*, util::*};
+use lazy_static::lazy_static;
+use log::*;
 use regex::Regex;
 use std::{
     fmt, fs::{create_dir, read_dir}, path::PathBuf,
 };
-use util::*;
 use uuid::Uuid;
 
 // This is my internal folder

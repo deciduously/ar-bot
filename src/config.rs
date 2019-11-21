@@ -1,8 +1,8 @@
 // config.rs handles loading and eventually writing to the app configuration
-use errors::*;
+use crate::{errors::*, util::file_contents_from_str_path};
+use serde_derive::{Deserialize, Serialize};
 use std::{fmt, path::PathBuf};
 use toml;
-use util::file_contents_from_str_path;
 
 static DEFAULT_CONFIG: &'static str = "Bot.toml";
 

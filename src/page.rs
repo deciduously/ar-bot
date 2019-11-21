@@ -1,9 +1,7 @@
 // page.rs handles the askama templates
 use askama::Template;
-use batch::{Batch, BatchEntry};
-use brain::Context;
 use chrono::prelude::*;
-use errors::*;
+use crate::{batch::{Batch, BatchEntry}, brain::Context, errors::*};
 use std::{fs::File, io::prelude::*};
 
 #[derive(Template)]

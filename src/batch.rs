@@ -1,13 +1,12 @@
 // batch.rs handles the string parsing and batching logic for eliminating redundant line items
-use brain::Brain;
-//use chrono::prelude::*;
-use email::Email;
-use errors::*;
-use log::Level;
+use crate::{brain::Brain, email::Email, errors::*};
+use lazy_static::lazy_static;
+use log::*;
 use regex::Regex;
 use std::{collections::HashMap, fmt, str::FromStr};
+
 #[cfg(test)]
-use util::*;
+use crate::util::*;
 
 type Alerts = HashMap<Product, Vec<String>>;
 
@@ -226,7 +225,7 @@ impl Entry {
             })
         } else {
             debug!("{}", s);
-            bail!("Couldn't match Regex")
+            panic!("Couldn't match Regex") // TODO error
         }
     }
 }
@@ -303,7 +302,7 @@ type UserID = u32;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use email::Email;
+    use crate::email::Email;
 
     #[test]
     fn test_entry_from_str() {
